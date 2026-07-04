@@ -123,7 +123,7 @@ export default function ConsultaVeicularGratisPage() {
       </Section>
 
       {/* Benefícios */}
-      <Section variant="slate">
+      <Section variant="light">
         <div className="mx-auto max-w-5xl">
           <p className="rp-section-eyebrow text-center">Por que consultar</p>
           <h2 className="rp-section-heading mt-2 text-center">
@@ -189,7 +189,7 @@ export default function ConsultaVeicularGratisPage() {
       </Section>
 
       {/* O que está incluído */}
-      <Section variant="slate">
+      <Section variant="light">
         <div className="mx-auto max-w-5xl">
           <p className="rp-section-eyebrow text-center">O que você recebe</p>
           <h2 className="rp-section-heading mt-2 text-center">

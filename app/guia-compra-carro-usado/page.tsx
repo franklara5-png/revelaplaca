@@ -190,7 +190,7 @@ export default function GuiaCompraCarroUsadoPage() {
       </Section>
 
       {/* Checklist rápido */}
-      <Section id="checklist" variant="slate">
+      <Section id="checklist" variant="light">
         <div className="mx-auto max-w-3xl">
           <p className="rp-section-eyebrow text-center">Checklist</p>
           <h2 className="rp-section-heading mt-2 text-center">
@@ -256,7 +256,7 @@ export default function GuiaCompraCarroUsadoPage() {
       </Section>
 
       {/* Sinais de alerta */}
-      <Section variant="slate">
+      <Section variant="light">
         <div className="mx-auto max-w-4xl">
           <div className="flex items-center gap-3">
             <AlertTriangle className="size-6 text-amber-600" />
@@ -406,7 +406,7 @@ export default function GuiaCompraCarroUsadoPage() {
       </Section>
 
       {/* FAQ */}
-      <Section variant="slate">
+      <Section variant="light">
         <div className="mx-auto max-w-3xl">
           <p className="rp-section-eyebrow text-center">Dúvidas frequentes</p>
           <h2 className="rp-section-heading mt-2 text-center">

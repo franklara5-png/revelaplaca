@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { COOKIE_NAME, validarSessaoAdmin } from "@/lib/admin/session";
+
+const COOKIE_NAME = "cp_admin_session";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -9,16 +10,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  const token = request.cookies.get(COOKIE_NAME)?.value;
+
+  // Admin login: redirect to /admin if already has a session cookie
   if (pathname === "/admin/login") {
-    const token = request.cookies.get(COOKIE_NAME)?.value;
-    if (await validarSessaoAdmin(token)) {
+    if (token) {
       return NextResponse.redirect(new URL("/admin", request.url));
     }
     return NextResponse.next();
   }
 
-  const token = request.cookies.get(COOKIE_NAME)?.value;
-  if (!(await validarSessaoAdmin(token))) {
+  // Other admin routes: block if no session cookie
+  if (!token) {
     const login = new URL("/admin/login", request.url);
     login.searchParams.set("next", pathname);
     return NextResponse.redirect(login);
