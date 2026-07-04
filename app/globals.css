@@ -1,0 +1,131 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+:root {
+  --rp-primary: 13 84 93;
+  --rp-success: 22 163 74;
+  --rp-danger: 220 38 38;
+  --rp-warning: 217 119 6;
+  --rp-ink: 15 23 42;
+  --rp-surface: 255 255 255;
+  --rp-bg: 248 250 252;
+  --rp-muted: 100 116 139;
+  --rp-border: 226 232 240;
+
+  --background: var(--rp-surface);
+  --foreground: var(--rp-ink);
+  --rp-primary-950: 5 40 46;
+  --rp-primary-900: var(--rp-primary);
+  --rp-primary-800: 16 100 110;
+  --rp-primary-700: 18 118 128;
+  --rp-primary-600: 20 138 150;
+  --rp-primary-500: 30 164 176;
+  --rp-primary-100: 219 239 242;
+  --rp-primary-50: 240 249 250;
+  --rp-slate-900: var(--rp-ink);
+  --rp-slate-600: 71 85 105;
+  --rp-slate-400: 148 163 184;
+  --rp-slate-100: 241 245 249;
+  --rp-slate-50: var(--rp-bg);
+  --rp-emerald-500: var(--rp-success);
+  --rp-amber-500: var(--rp-warning);
+  --rp-red-500: var(--rp-danger);
+
+  --rp-shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 4px 12px rgb(15 23 42 / 0.06);
+  --rp-shadow-card-hover: 0 2px 4px rgb(15 23 42 / 0.06), 0 12px 32px rgb(15 23 42 / 0.1);
+  --rp-radius: 18px;
+  --rp-header-height: 4.5rem;
+}
+
+@theme inline {
+  --color-background: rgb(var(--background));
+  --color-foreground: rgb(var(--foreground));
+  --font-sans: var(--font-inter);
+  --color-rp-primary: rgb(var(--rp-primary));
+  --color-rp-success: rgb(var(--rp-success));
+  --color-rp-danger: rgb(var(--rp-danger));
+  --color-rp-warning: rgb(var(--rp-warning));
+  --color-rp-ink: rgb(var(--rp-ink));
+  --color-rp-surface: rgb(var(--rp-surface));
+  --color-rp-bg: rgb(var(--rp-bg));
+  --color-rp-primary-950: rgb(var(--rp-primary-950));
+  --color-rp-primary-900: rgb(var(--rp-primary-900));
+  --color-rp-primary-800: rgb(var(--rp-primary-800));
+  --color-rp-primary-700: rgb(var(--rp-primary-700));
+  --color-rp-primary-600: rgb(var(--rp-primary-600));
+  --color-rp-primary-500: rgb(var(--rp-primary-500));
+  --color-rp-primary-100: rgb(var(--rp-primary-100));
+  --color-rp-primary-50: rgb(var(--rp-primary-50));
+  --color-rp-slate-900: rgb(var(--rp-slate-900));
+  --color-rp-slate-600: rgb(var(--rp-slate-600));
+  --color-rp-slate-400: rgb(var(--rp-slate-400));
+  --color-rp-slate-100: rgb(var(--rp-slate-100));
+  --color-rp-slate-50: rgb(var(--rp-slate-50));
+  --color-rp-emerald-500: rgb(var(--rp-emerald-500));
+  --color-rp-amber-500: rgb(var(--rp-amber-500));
+  --color-rp-red-500: rgb(var(--rp-red-500));
+}
+
+.rp-card {
+  border-radius: var(--rp-radius);
+  box-shadow: var(--rp-shadow-card);
+  border: 1px solid rgb(var(--rp-border));
+  background: rgb(var(--rp-surface));
+}
+
+.rp-card:hover {
+  box-shadow: var(--rp-shadow-card-hover);
+}
+
+.rp-section-eyebrow {
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgb(var(--rp-primary-700));
+}
+
+.rp-section-heading {
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: rgb(var(--rp-ink));
+}
+
+.rp-heading-xl {
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.rp-body {
+  font-size: 1rem;
+  line-height: 1.65;
+  color: rgb(var(--rp-slate-600));
+}
+
+@media (min-width: 768px) {
+  .rp-body {
+    font-size: 1.125rem;
+  }
+}
+
+.rp-hero-glow {
+  background: radial-gradient(
+    ellipse 80% 50% at 50% -20%,
+    rgb(var(--rp-primary) / 0.12),
+    transparent
+  );
+}
+
+body {
+  background: rgb(var(--rp-bg));
+  color: rgb(var(--rp-ink));
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.prose-rp {
+  @apply prose prose-slate max-w-none prose-headings:text-rp-ink prose-a:text-rp-primary-700 prose-a:no-underline hover:prose-a:underline;
+}

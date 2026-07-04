@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/recupera-abandono",
+      "schedule": "0 9 * * *"
+    }
+  ]
+}
