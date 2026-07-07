@@ -7,7 +7,7 @@ import { SITE_NAME } from "@/lib/site-url";
 export const metadata = getSeoMetadata({
   title: "Consulta Veicular Grátis | Como Puxar Dados do Veículo",
   description:
-    "Faça consulta veicular grátis pela placa: descubra marca, modelo, ano, cor, valor FIPE e muito mais. Relatório completo opcional com leilão, sinistro, roubo e restrições.",
+    "Faça consulta veicular grátis pela placa: descubra marca, modelo, ano, cor e valor FIPE. Relatório completo opcional com leilão, sinistro e restrições.",
   path: "/consulta-veicular-gratis",
   keywords: [
     "consulta veicular grátis",
