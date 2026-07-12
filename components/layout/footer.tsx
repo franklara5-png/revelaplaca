@@ -3,6 +3,7 @@ import { Logo } from "@/components/brand";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE } from "@/lib/site-url";
 
 const FOOTER_LINKS = [
+  { href: "/sobre", label: "Sobre" },
   { href: "/tabela-fipe", label: "Tabela FIPE" },
   { href: "/fontes", label: "Fontes de dados" },
   { href: "/contrato-compra-venda-veiculo", label: "Contrato compra e venda" },
@@ -54,6 +55,9 @@ export function Footer() {
             Desconfiei
           </a>
           .
+        </p>
+        <p className="mt-3 text-center text-xs text-rp-slate-400">
+          Operado pela Altivia &mdash; CNPJ 63.101.423/0001-18
         </p>
       </div>
     </footer>

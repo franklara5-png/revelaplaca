@@ -16,8 +16,9 @@ export default function TermosPage() {
 
       <h2>1. Objeto do serviço</h2>
       <p>
-        O {SITE_NAME} oferece consulta veicular pela placa com dados básicos
-        gratuitos e relatório completo pago. As informações referem-se
+        O {SITE_NAME}, operado por Altivia Tecnologia e Serviços Digitais LTDA
+        (CNPJ 63.101.423/0001-18), oferece consulta veicular pela placa com dados
+        básicos gratuitos e relatório completo pago. As informações referem-se
         exclusivamente ao <strong>veículo</strong>, não ao proprietário.
       </p>
 

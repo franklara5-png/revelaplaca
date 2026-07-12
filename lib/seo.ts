@@ -15,6 +15,8 @@ export function getOrganizationJsonLd() {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: SITE_NAME,
+    legalName: "Altivia Tecnologia e Serviços Digitais LTDA",
+    taxID: "63.101.423/0001-18",
     url: getSiteUrl(),
     slogan: SITE_TAGLINE,
     description: SITE_DESCRIPTION,

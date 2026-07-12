@@ -16,8 +16,10 @@ export default function PrivacidadePage() {
 
       <h2>1. Compromisso com a LGPD</h2>
       <p>
-        O {SITE_NAME} trata dados pessoais em conformidade com a Lei Geral de
-        Proteção de Dados (Lei nº 13.709/2018). Nosso produto foca em{" "}
+        O {SITE_NAME} é operado por Altivia Tecnologia e Serviços Digitais LTDA
+        (CNPJ 63.101.423/0001-18) e trata dados pessoais em conformidade com a
+        Lei Geral de Proteção de Dados (Lei nº 13.709/2018). Nosso produto foca
+        em{" "}
         <strong>dados do veículo</strong> — não coletamos nem exibimos nome, CPF,
         CNPJ ou endereço do proprietário.
       </p>

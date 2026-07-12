@@ -38,6 +38,9 @@ export default function HomePage() {
           <div className="mt-8 flex justify-center [&_input]:border-white/20 [&_input]:bg-white/10 [&_input]:text-white [&_input]:placeholder:text-white/50">
             <PlacaSearchForm />
           </div>
+          <p className="mt-6 text-center text-xs text-rp-primary-100/60">
+            Operado pela Altivia, CNPJ 63.101.423/0001-18
+          </p>
         </div>
       </Section>
     </>
