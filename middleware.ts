@@ -6,6 +6,18 @@ const COOKIE_NAME = "cp_admin_session";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // ─── Painel do cliente (Better Auth) — otimista, só cookie ────────────
+  if (pathname === "/painel" || pathname.startsWith("/painel/")) {
+    const sessionToken = request.cookies.get("better-auth.session_token")?.value;
+    if (!sessionToken) {
+      const login = new URL("/login", request.url);
+      login.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(login);
+    }
+    return NextResponse.next();
+  }
+
+  // ─── Admin (senha) ─────────────────────────────────────────────────────
   if (!pathname.startsWith("/admin")) {
     return NextResponse.next();
   }
@@ -31,5 +43,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/painel/:path*"],
 };

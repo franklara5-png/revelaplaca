@@ -8,6 +8,13 @@
       "when": 1751574000000,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1783873958447,
+      "tag": "0001_sturdy_silver_samurai",
+      "breakpoints": true
     }
   ]
 }

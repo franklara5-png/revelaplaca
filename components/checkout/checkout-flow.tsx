@@ -20,6 +20,7 @@ type Props = {
   placa: string;
   veiculoResumo?: string | null;
   pedidoRetomada?: { id: string; emailMascarado: string };
+  defaultEmail?: string;
 };
 
 type Etapa = "form" | "pix" | "cartao" | "sucesso";
@@ -27,8 +28,8 @@ type Etapa = "form" | "pix" | "cartao" | "sucesso";
 const POLL_INTERVAL_MS = 4_000;
 const POLL_MAX_MS = 10 * 60 * 1000;
 
-export function CheckoutFlow({ placa, veiculoResumo, pedidoRetomada }: Props) {
-  const [email, setEmail] = useState("");
+export function CheckoutFlow({ placa, veiculoResumo, pedidoRetomada, defaultEmail }: Props) {
+  const [email, setEmail] = useState(defaultEmail ?? "");
   const [metodo, setMetodo] = useState<"PIX" | "CREDIT_CARD">("PIX");
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);

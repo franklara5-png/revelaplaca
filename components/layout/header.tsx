@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { Logo } from "@/components/brand";
+import { UserMenu } from "@/components/UserMenu";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui";
 
@@ -54,6 +55,7 @@ export function Header() {
           <Button asChild size="sm" className="ml-2">
             <Link href="/#consultar">Revelar placa</Link>
           </Button>
+          <UserMenu />
         </nav>
 
         <button

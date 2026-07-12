@@ -9,6 +9,7 @@ import { buscarPedido } from "@/lib/pedidos";
 import { formatarPlaca, normalizarPlaca, validarPlaca } from "@/lib/placa";
 import { buscarVeiculoCache, veiculoParaResposta } from "@/lib/veiculos";
 import { PRECO_RELATORIO_REAIS } from "@/lib/constants/pagamento";
+import { getSession } from "@/lib/get-session";
 
 type Props = {
   params: Promise<{ placa: string }>;
@@ -31,6 +32,10 @@ export default async function CheckoutPage({ params, searchParams }: Props) {
   const { placa: placaParam } = await params;
   const { pedido: pedidoId } = await searchParams;
   const placa = normalizarPlaca(placaParam);
+
+  // Sessão opcional — pré-preenche email se logado
+  const session = await getSession().catch(() => null);
+  const defaultEmail = session?.user?.email;
 
   if (!validarPlaca(placa)) {
     notFound();
@@ -72,6 +77,7 @@ export default async function CheckoutPage({ params, searchParams }: Props) {
           placa={placa}
           veiculoResumo={veiculoResumo}
           pedidoRetomada={pedidoRetomada}
+          defaultEmail={defaultEmail}
         />
 
         <Card className="mt-6 bg-rp-slate-50">
