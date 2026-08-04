@@ -6,12 +6,15 @@ import { getSession } from "@/lib/get-session";
 import { getPedidosPorEmail } from "@/lib/pedidos-usuario";
 import { formatarPlaca } from "@/lib/placa";
 import { PRECO_RELATORIO_REAIS } from "@/lib/constants/pagamento";
+import { getSeoMetadata } from "@/lib/seo";
 import { LogoutButton } from "./LogoutButton";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = getSeoMetadata({
   title: "Minha Conta",
-  robots: { index: false, follow: false },
-};
+  description: "Painel do cliente RevelaPlaca.",
+  path: "/painel",
+  noindex: true,
+});
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
   pendente: <Clock className="w-4 h-4 text-rp-amber-500" />,

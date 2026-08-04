@@ -8,7 +8,11 @@ import {
 } from "@/components/landing";
 import { PlacaSearchForm } from "@/components/landing/placa-search-form";
 import { Section } from "@/components/ui";
-import { getSeoMetadata } from "@/lib/seo";
+import {
+  getOrganizationJsonLd,
+  getSeoMetadata,
+  getWebSiteJsonLd,
+} from "@/lib/seo";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE } from "@/lib/site-url";
 
 export const metadata = getSeoMetadata({
@@ -21,6 +25,18 @@ export const metadata = getSeoMetadata({
 export default function HomePage() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(getOrganizationJsonLd()),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(getWebSiteJsonLd()),
+        }}
+      />
       <FaqJsonLd />
       <Hero />
       <ComoFunciona />

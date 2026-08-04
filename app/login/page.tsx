@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { GoogleLoginButton } from "@/components/GoogleLoginButton";
+import { getSeoMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = getSeoMetadata({
   title: "Entrar",
-  robots: { index: false, follow: false },
-};
+  description: "Acesse sua conta RevelaPlaca para ver relatórios e histórico.",
+  path: "/login",
+  noindex: true,
+});
 
 export default function LoginPage() {
   return (

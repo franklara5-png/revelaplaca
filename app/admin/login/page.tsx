@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { AdminLoginForm } from "@/components/admin/admin-login-form";
+import { getSeoMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = getSeoMetadata({
   title: "Login — Admin",
-  robots: { index: false, follow: false },
-};
+  description: "Login do painel administrativo.",
+  path: "/admin/login",
+  noindex: true,
+});
 
 export default function AdminLoginPage() {
   return (

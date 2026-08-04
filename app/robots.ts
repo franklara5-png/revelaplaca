@@ -1,17 +1,25 @@
 import type { MetadataRoute } from "next";
-import { getSiteUrl } from "@/lib/site-url";
+import { PRODUCTION_SITE_URL } from "@/lib/site-url";
 
 export default function robots(): MetadataRoute.Robots {
-  const siteUrl = getSiteUrl();
-
   return {
     rules: [
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/checkout/", "/relatorio/", "/api/", "/admin"],
+        disallow: [
+          "/api/",
+          "/admin",
+          "/admin/",
+          "/checkout/",
+          "/relatorio/",
+          "/painel",
+          "/painel/",
+          "/login",
+        ],
       },
     ],
-    sitemap: `${siteUrl}/sitemap.xml`,
+    // Sempre apex de produção — não depende de env de preview.
+    sitemap: `${PRODUCTION_SITE_URL}/sitemap.xml`,
   };
 }

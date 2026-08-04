@@ -30,18 +30,26 @@ function parseFaqs(data: Record<string, unknown>): BlogPost["faqs"] {
 
 function parsePostFile(filename: string): BlogPost {
   const slug = filename.replace(/\.mdx$/, "");
-  const raw = fs.readFileSync(path.join(POSTS_DIR, filename), "utf8");
+  const filePath = path.join(POSTS_DIR, filename);
+  const raw = fs.readFileSync(filePath, "utf8");
   const { data, content } = matter(raw);
+  const mtime = fs.statSync(filePath).mtime;
+
+  const dateFromFrontmatter =
+    typeof data.date === "string" && data.date.trim()
+      ? String(data.date).trim()
+      : "";
 
   return {
     slug,
     title: String(data.title ?? ""),
     description: String(data.description ?? ""),
-    date: String(data.date ?? ""),
+    date: dateFromFrontmatter || mtime.toISOString().slice(0, 10),
     category: data.category as BlogCategory,
     tags: Array.isArray(data.tags) ? data.tags.map(String) : [],
     readTime: String(data.readTime ?? ""),
     featured: Boolean(data.featured),
+    draft: Boolean(data.draft),
     author: data.author ? String(data.author) : undefined,
     canonical: data.canonical ? String(data.canonical) : undefined,
     image: data.image ? String(data.image) : undefined,
@@ -55,6 +63,10 @@ function listPostFiles(): string[] {
   return fs.readdirSync(POSTS_DIR).filter((file) => file.endsWith(".mdx"));
 }
 
+function isPublished(post: BlogPostMeta): boolean {
+  return !post.draft;
+}
+
 export function getAllPosts(): BlogPostMeta[] {
   return listPostFiles()
     .map((file) => {
@@ -62,13 +74,16 @@ export function getAllPosts(): BlogPostMeta[] {
       const { content: _, ...meta } = post;
       return meta;
     })
+    .filter(isPublished)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
 export function getPostBySlug(slug: string): BlogPost | null {
   const filename = `${slug}.mdx`;
   if (!listPostFiles().includes(filename)) return null;
-  return parsePostFile(filename);
+  const post = parsePostFile(filename);
+  if (post.draft) return null;
+  return post;
 }
 
 export function getPostsByCategory(category: BlogCategory): BlogPostMeta[] {
@@ -89,7 +104,9 @@ export function getAllPostSlugs(): string[] {
   return getAllPosts().map((post) => post.slug);
 }
 
-/** Compatível com sitemap (async) */
-export async function listarPostsBlog(): Promise<Array<{ slug: string }>> {
-  return getAllPostSlugs().map((slug) => ({ slug }));
+/** Compatível com sitemap (async) — exclui drafts. */
+export async function listarPostsBlog(): Promise<
+  Array<{ slug: string; date: string }>
+> {
+  return getAllPosts().map((post) => ({ slug: post.slug, date: post.date }));
 }

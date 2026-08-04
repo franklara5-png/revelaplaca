@@ -3,27 +3,38 @@ import { getSiteUrl } from "@/lib/site-url";
 import { listarMarcas, listarModelosPorMarca, listarPlacasCacheadas } from "@/lib/fipe";
 import { listarPostsBlog } from "@/lib/blog";
 
-const MAX_URLS_POR_SITEMAP = 40_000;
+type SitemapItem = {
+  loc: string;
+  lastModified?: Date;
+  priority?: number;
+  changeFrequency?: MetadataRoute.Sitemap[0]["changeFrequency"];
+};
 
-async function montarTodasUrls(): Promise<
-  Array<{ loc: string; lastModified?: Date; priority?: number; changeFrequency?: MetadataRoute.Sitemap[0]["changeFrequency"] }>
-> {
-  const urls: Array<{
-    loc: string;
-    lastModified?: Date;
-    priority?: number;
-    changeFrequency?: MetadataRoute.Sitemap[0]["changeFrequency"];
-  }> = [];
+async function montarTodasUrls(): Promise<SitemapItem[]> {
+  const urls: SitemapItem[] = [];
 
+  // Rotas estáticas indexáveis
   urls.push({ loc: "/", priority: 1, changeFrequency: "daily" });
   urls.push({ loc: "/exemplo", priority: 0.85, changeFrequency: "monthly" });
   urls.push({ loc: "/fontes", priority: 0.75, changeFrequency: "monthly" });
+  urls.push({ loc: "/sobre", priority: 0.7, changeFrequency: "monthly" });
+  urls.push({
+    loc: "/consulta-veicular-gratis",
+    priority: 0.9,
+    changeFrequency: "monthly",
+  });
+  urls.push({
+    loc: "/guia-compra-carro-usado",
+    priority: 0.85,
+    changeFrequency: "monthly",
+  });
   urls.push({
     loc: "/contrato-compra-venda-veiculo",
     priority: 0.8,
     changeFrequency: "monthly",
   });
   urls.push({ loc: "/tabela-fipe", priority: 0.9, changeFrequency: "weekly" });
+  urls.push({ loc: "/blog", priority: 0.7, changeFrequency: "weekly" });
 
   const marcas = await listarMarcas();
   for (const marca of marcas) {
@@ -59,39 +70,29 @@ async function montarTodasUrls(): Promise<
     offset += batch;
   }
 
+  // Posts MDX publicados (drafts já filtrados em listarPostsBlog)
   const posts = await listarPostsBlog();
-  if (posts.length > 0) {
-    urls.push({ loc: "/blog", priority: 0.6, changeFrequency: "weekly" });
-    for (const post of posts) {
-      urls.push({
-        loc: `/blog/${post.slug}`,
-        priority: 0.6,
-        changeFrequency: "monthly",
-      });
-    }
+  for (const post of posts) {
+    const lastModified = post.date ? new Date(post.date) : undefined;
+    urls.push({
+      loc: `/blog/${post.slug}`,
+      lastModified:
+        lastModified && !Number.isNaN(lastModified.getTime())
+          ? lastModified
+          : undefined,
+      priority: 0.65,
+      changeFrequency: "monthly",
+    });
   }
 
   return urls;
 }
 
-export async function generateSitemaps() {
-  const todas = await montarTodasUrls();
-  const chunks = Math.max(1, Math.ceil(todas.length / MAX_URLS_POR_SITEMAP));
-  return Array.from({ length: chunks }, (_, id) => ({ id }));
-}
-
-export default async function sitemap(props: {
-  id: Promise<string>;
-}): Promise<MetadataRoute.Sitemap> {
-  const id = Number(await props.id);
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = getSiteUrl();
   const todas = await montarTodasUrls();
-  const slice = todas.slice(
-    id * MAX_URLS_POR_SITEMAP,
-    (id + 1) * MAX_URLS_POR_SITEMAP,
-  );
 
-  return slice.map((item) => ({
+  return todas.map((item) => ({
     url: `${siteUrl}${item.loc}`,
     lastModified: item.lastModified ?? new Date(),
     changeFrequency: item.changeFrequency ?? "weekly",

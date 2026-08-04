@@ -38,7 +38,10 @@ export async function generateMetadata({
     title: post.title,
     description: post.description,
     path: `/blog/${slug}`,
-    ogImage: post.image,
+    type: "article",
+    // Só sobrescreve a OG dinâmica se o frontmatter tiver URL absoluta.
+    ogImage:
+      post.image && /^https?:\/\//i.test(post.image) ? post.image : undefined,
   });
 }
 
@@ -57,10 +60,11 @@ export default async function BlogPostPage({
 
   const jsonLdGraph = [
     {
-      "@type": "Article",
+      "@type": "BlogPosting",
       headline: post.title,
       description: post.description,
       datePublished: post.date,
+      dateModified: post.date,
       author: {
         "@type": "Organization",
         name: post.author ?? SITE_NAME,
@@ -70,9 +74,17 @@ export default async function BlogPostPage({
         "@type": "Organization",
         name: SITE_NAME,
         url: siteUrl,
+        logo: {
+          "@type": "ImageObject",
+          url: `${siteUrl}/icon.svg`,
+        },
       },
       mainEntityOfPage: { "@type": "WebPage", "@id": postUrl },
-      ...(post.image ? { image: post.image } : {}),
+      url: postUrl,
+      inLanguage: "pt-BR",
+      ...(post.image && /^https?:\/\//i.test(post.image)
+        ? { image: post.image }
+        : { image: `${siteUrl}/blog/${slug}/opengraph-image` }),
     },
     {
       "@type": "BreadcrumbList",

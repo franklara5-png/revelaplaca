@@ -22,6 +22,8 @@ export interface BlogPostMeta {
   tags: string[];
   readTime: string;
   featured: boolean;
+  /** Se true, o post não entra em listagens públicas nem no sitemap. */
+  draft?: boolean;
   author?: string;
   canonical?: string;
   image?: string;
