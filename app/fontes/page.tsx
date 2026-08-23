@@ -4,7 +4,7 @@ import { getSeoMetadata } from "@/lib/seo";
 import { SITE_NAME } from "@/lib/site-url";
 
 export const metadata = getSeoMetadata({
-  title: "Fontes de dados veiculares | RevelaPlaca",
+  title: "Fontes de dados veiculares",
   description:
     "Transparência sobre as fontes usadas no RevelaPlaca: bases públicas, Tabela FIPE e parceiros autorizados. Sem dados pessoais do proprietário.",
   path: "/fontes",

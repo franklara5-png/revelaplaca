@@ -8,6 +8,7 @@ import {
   uuid,
   jsonb,
   index,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 
 export const veiculos = pgTable("veiculos", {
@@ -122,17 +123,24 @@ export const creditos = pgTable("creditos", {
 export const fipeModelos = pgTable(
   "fipe_modelos",
   {
-    codigo: text("codigo").primaryKey(),
+    // O código FIPE se repete entre anos/combustíveis do mesmo modelo
+    // (ex.: "001267-0" cobre Palio 2009 a 2014). Por isso a PK é composta —
+    // com PK só em `codigo`, cada ano importado sobrescrevia o anterior.
+    codigo: text("codigo").notNull(),
     marca: text("marca").notNull(),
     modelo: text("modelo").notNull(),
     ano: integer("ano").notNull(),
-    combustivel: text("combustivel"),
+    combustivel: text("combustivel").notNull().default(""),
     valor: numeric("valor"),
     referencia: text("referencia"),
     slugMarca: text("slug_marca").notNull(),
     slugModelo: text("slug_modelo").notNull(),
   },
   (table) => [
+    primaryKey({
+      name: "fipe_modelos_pkey",
+      columns: [table.codigo, table.ano, table.combustivel],
+    }),
     index("idx_fipe_marca").on(table.slugMarca),
     index("idx_fipe_modelo").on(table.slugMarca, table.slugModelo),
   ],

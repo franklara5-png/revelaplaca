@@ -4,6 +4,7 @@ import { Card } from "@/components/ui";
 import { getSeoMetadata } from "@/lib/seo";
 import {
   buscarModelo,
+  formatarAnoFipe,
   formatarValorFipe,
   listarPrecosModelo,
   textoVariado,
@@ -36,7 +37,7 @@ export async function generateMetadata({ params }: Props) {
     : null;
 
   const descricao = valorRecente && anoRecente
-    ? `Preços FIPE do ${info.marca} ${info.modelo}. Referência ${anoRecente}: ${valorRecente}. Consulte todas as versões em ${SITE_NAME}.`
+    ? `Preços FIPE do ${info.marca} ${info.modelo}. Referência ${formatarAnoFipe(anoRecente)}: ${valorRecente}. Consulte todas as versões em ${SITE_NAME}.`
     : `Preços FIPE do ${info.marca} ${info.modelo} por ano e combustível. Consulte em ${SITE_NAME}.`;
 
   return getSeoMetadata({
@@ -112,11 +113,13 @@ export default async function TabelaFipeModeloPage({ params }: Props) {
               <tbody>
                 {precos.map((row) => (
                   <tr
-                    key={row.codigo}
+                    // `codigo` sozinho repete entre anos/combustiveis do mesmo
+                    // modelo — a chave precisa ser a PK composta inteira.
+                    key={`${row.codigo}-${row.ano}-${row.combustivel}`}
                     className="border-b border-rp-slate-100 last:border-0"
                   >
                     <td className="px-6 py-4 font-medium text-rp-slate-900">
-                      {row.ano}
+                      {formatarAnoFipe(row.ano)}
                     </td>
                     <td className="px-4 py-4 text-rp-slate-600">
                       {row.combustivel ?? "—"}

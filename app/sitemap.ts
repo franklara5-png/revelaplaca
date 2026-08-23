@@ -3,6 +3,10 @@ import { getSiteUrl } from "@/lib/site-url";
 import { listarMarcas, listarModelosPorMarca, listarPlacasCacheadas } from "@/lib/fipe";
 import { listarPostsBlog } from "@/lib/blog";
 
+// Sem isto o sitemap e gerado uma vez no build e congela: as URLs de FIPE e de
+// placa vem do banco, entao novas linhas so apareceriam no proximo deploy.
+export const revalidate = 3600;
+
 type SitemapItem = {
   loc: string;
   lastModified?: Date;

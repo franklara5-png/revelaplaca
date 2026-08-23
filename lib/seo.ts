@@ -96,18 +96,20 @@ export function getSeoMetadata({
 
 export function getDefaultMetadata(): Metadata {
   const siteUrl = getSiteUrl();
+  const base = getSeoMetadata({
+    title: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    description: SITE_DESCRIPTION,
+    path: "/",
+  });
 
   return {
+    ...base,
     metadataBase: new URL(siteUrl),
+    // Precisa vir DEPOIS do spread: `base.title` e uma string e sobrescrevia
+    // este objeto, deixando o template `%s | RevelaPlaca` sem efeito nenhum.
     title: {
       default: `${SITE_NAME} — ${SITE_TAGLINE}`,
       template: `%s | ${SITE_NAME}`,
     },
-    description: SITE_DESCRIPTION,
-    ...getSeoMetadata({
-      title: `${SITE_NAME} — ${SITE_TAGLINE}`,
-      description: SITE_DESCRIPTION,
-      path: "/",
-    }),
   };
 }

@@ -132,6 +132,14 @@ export async function listarPlacasCacheadas(
     .limit(limit);
 }
 
+/** A FIPE usa 32000 no lugar do ano para veiculo 0 km. */
+export const ANO_ZERO_KM = 32000;
+
+export function formatarAnoFipe(ano: number | null | undefined): string {
+  if (ano === null || ano === undefined) return "—";
+  return ano === ANO_ZERO_KM ? "0 km" : String(ano);
+}
+
 export function formatarValorFipe(valor: string | number | null | undefined): string {
   if (valor === null || valor === undefined) return "—";
   const n = typeof valor === "number" ? valor : Number(valor);

@@ -10,7 +10,9 @@ import { Button } from "@/components/ui";
 
 const NAV_LINKS = [
   { href: "/#como-funciona", label: "Como funciona" },
-  { href: "/#relatorio", label: "Relatório" },
+  // Ancoras nao passam link interno para outras paginas. Esta entrada aponta
+  // para a landing de maior intencao de busca, que antes era orfa.
+  { href: "/consulta-veicular-gratis", label: "Consulta grátis" },
   { href: "/tabela-fipe", label: "Tabela FIPE" },
   { href: "/blog", label: "Blog" },
 ];

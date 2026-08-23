@@ -4,9 +4,12 @@ import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE } from "@/lib/site-url";
 
 const FOOTER_LINKS = [
   { href: "/sobre", label: "Sobre" },
+  { href: "/consulta-veicular-gratis", label: "Consulta veicular grátis" },
+  { href: "/guia-compra-carro-usado", label: "Guia de compra" },
   { href: "/tabela-fipe", label: "Tabela FIPE" },
   { href: "/fontes", label: "Fontes de dados" },
   { href: "/contrato-compra-venda-veiculo", label: "Contrato compra e venda" },
+  { href: "/exemplo", label: "Exemplo de relatório" },
   { href: "/blog", label: "Blog" },
   { href: "/termos", label: "Termos de uso" },
   { href: "/privacidade", label: "Privacidade" },

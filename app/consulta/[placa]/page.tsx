@@ -49,10 +49,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     });
   }
 
+  // Sem cache a pagina e so o portao do Turnstile: conteudo identico para
+  // qualquer placa em formato valido. Indexar isso seria abrir ~500 milhoes de
+  // URLs duplicadas para o Googlebot. So a versao com dados reais e indexavel.
   return getSeoMetadata({
     title: `Placa ${placaFmt} — Consulta veicular grátis`,
     description: `Consulte a placa ${placaFmt} gratuitamente. Veja marca, modelo, ano, cor, município e valor FIPE em ${SITE_NAME}.`,
     path: `/consulta/${placa}`,
+    noindex: true,
   });
 }
 

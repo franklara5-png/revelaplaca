@@ -44,3 +44,6 @@ next-env.d.ts
 .vercel
 .env*
 !.env.example
+
+# checkpoint do importador FIPE (progresso local, nao versionar)
+.fipe-checkpoint.json

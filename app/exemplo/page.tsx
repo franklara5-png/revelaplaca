@@ -4,7 +4,7 @@ import { PLACA_EXEMPLO, relatorioExemploNormalizado } from "@/lib/relatorio/exem
 import { formatarPlaca } from "@/lib/placa";
 
 export const metadata = getSeoMetadata({
-  title: "Exemplo de relatório veicular completo | RevelaPlaca",
+  title: "Exemplo de relatório veicular completo",
   description:
     "Veja como é o relatório completo RevelaPlaca: leilão, sinistro, roubo, gravame, restrições e débitos — com dados fictícios ilustrativos.",
   path: "/exemplo",
