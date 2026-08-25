@@ -146,6 +146,30 @@ export const fipeModelos = pgTable(
   ],
 );
 
+// ─── Hermes (tracking geral de visitas p/ dashboard interno) ──────────────────
+// Tabela nova e separada do antifraude (consultas/adminLoginTentativas/eventosApiRate
+// usam ip_hash). Aqui o IP fica em texto puro — cada visita é 1 INSERT, sem upsert;
+// a agregação "1 IP = 1 linha" acontece só na leitura (GROUP BY ip).
+
+export const siteVisits = pgTable(
+  "site_visits",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ip: text("ip"),
+    path: text("path"),
+    referrer: text("referrer"),
+    userAgent: text("user_agent"),
+    country: text("country"),
+    region: text("region"),
+    city: text("city"),
+    visitedAt: timestamp("visited_at", { withTimezone: true }).defaultNow(),
+  },
+  (table) => [
+    index("idx_site_visits_visited_at").on(table.visitedAt),
+    index("idx_site_visits_ip").on(table.ip),
+  ],
+);
+
 // ─── Better Auth ──────────────────────────────────────────────────────────────
 
 export const users = pgTable("user", {
