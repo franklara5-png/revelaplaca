@@ -11,6 +11,18 @@ export async function sendEmail(mensagem: EmailMensagem): Promise<boolean> {
   const apiKey = process.env.BREVO_API_KEY;
 
   if (!apiKey) {
+    // Em producao, devolver `true` aqui era mentir para quem chamou: o
+    // relatorio PAGO e entregue por e-mail, entao o cliente pagaria R$ 24,90,
+    // nao receberia nada, e o sistema registraria sucesso. Sem BREVO_API_KEY
+    // configurada, a resposta honesta e "nao enviei".
+    if (process.env.NODE_ENV === "production") {
+      console.error(
+        "[email] BREVO_API_KEY nao configurada em producao — e-mail NAO enviado para",
+        mensagem.to,
+      );
+      return false;
+    }
+
     console.info("[email] BREVO_API_KEY não configurada — log apenas:");
     console.info(`  Para: ${mensagem.to}`);
     console.info(`  Assunto: ${mensagem.subject}`);

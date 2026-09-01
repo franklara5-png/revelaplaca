@@ -33,32 +33,57 @@ async function enviarEmailRecuperacao(
   });
 }
 
+/** Devolve se ALGUMA tentativa deu certo. */
 async function tentarEnviarComBackoff(
   email: string,
   placa: string,
   pedidoId: string,
-): Promise<void> {
+): Promise<boolean> {
   for (let i = 0; i < MAX_TENTATIVAS; i++) {
     if (BACKOFF_MS[i] > 0) {
       await new Promise((r) => setTimeout(r, BACKOFF_MS[i]));
     }
     const ok = await enviarEmailRecuperacao(email, placa, pedidoId);
-    if (ok) return;
+    if (ok) return true;
   }
+  return false;
 }
 
 export async function processarRecuperacaoAbandono(): Promise<{
   processados: number;
   enviados: number;
+  falharam: number;
 }> {
   const pendentes = await buscarPedidosAbandonados();
   let enviados = 0;
+  let falharam = 0;
 
   for (const pedido of pendentes) {
-    await tentarEnviarComBackoff(pedido.email, pedido.placa, pedido.id);
+    const ok = await tentarEnviarComBackoff(
+      pedido.email,
+      pedido.placa,
+      pedido.id,
+    );
+
+    if (!ok) {
+      // NAO marcar como enviado: a versao anterior marcava mesmo apos as tres
+      // tentativas falharem, e como a busca de abandonados filtra por
+      // emailRecuperacaoEnviado = false, o pedido nunca mais era tentado.
+      // Uma falha temporaria da Brevo custava a recuperacao daquela venda,
+      // para sempre e sem aviso — o cron ainda reportava sucesso.
+      falharam++;
+      console.error(
+        "[recuperacao] falhou apos",
+        MAX_TENTATIVAS,
+        "tentativas, pedido segue elegivel:",
+        pedido.id,
+      );
+      continue;
+    }
+
     await marcarEmailRecuperacaoEnviado(pedido.id);
     enviados++;
   }
 
-  return { processados: pendentes.length, enviados };
+  return { processados: pendentes.length, enviados, falharam };
 }

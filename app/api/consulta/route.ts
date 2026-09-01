@@ -88,6 +88,20 @@ export async function POST(request: Request) {
     });
   }
 
+  // Registrar ANTES de chamar o fornecedor.
+  //
+  // Antes o registro so acontecia depois de a consulta dar certo, e o
+  // rateLimitExcedido conta exatamente essas linhas. Ou seja: tentativa que
+  // FALHAVA nao entrava na conta, e quem batesse em placas que falham tinha
+  // tentativas ilimitadas — cada uma custando uma chamada ao fornecedor, que
+  // e paga. O limite protegia tudo menos o que custa dinheiro.
+  await registrarConsulta({
+    placa,
+    ipHash,
+    origem: body.origem,
+    cacheHit: false,
+  });
+
   const fornecedor = await consultarFornecedorBasico(placa);
 
   if (!fornecedor) {
@@ -101,13 +115,6 @@ export async function POST(request: Request) {
   }
 
   const salvo = await persistirVeiculo(fornecedor.dados, fornecedor.bruto);
-
-  await registrarConsulta({
-    placa,
-    ipHash,
-    origem: body.origem,
-    cacheHit: false,
-  });
 
   void registrarEvento("consulta_gratis", {
     placa,
