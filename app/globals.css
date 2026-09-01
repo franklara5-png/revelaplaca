@@ -137,6 +137,14 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
+/* Tabela de post rola dentro de si em vez de espremer coluna ou empurrar a
+   pagina para o lado. Com 4 colunas a 375px as celulas ficavam ilegiveis. */
+.prose-rp table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+}
+
 .prose-rp {
   @apply prose prose-slate max-w-none prose-headings:text-rp-ink prose-a:text-rp-primary-700 prose-a:no-underline hover:prose-a:underline;
 }

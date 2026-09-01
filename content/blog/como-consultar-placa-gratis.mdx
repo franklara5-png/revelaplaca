@@ -1,10 +1,10 @@
 ---
 title: "Como consultar placa de veículo grátis"
-description: "Passo a passo para revelar dados básicos de qualquer placa no Brasil e entender o que você recebe na consulta gratuita do RevelaPlaca."
+description: "Passo a passo para consultar qualquer placa do Brasil de graça: o que aparece, o que a LGPD impede de aparecer e como interpretar quando os dados não batem com o carro."
 date: "2026-03-01"
 category: guias
-tags: ["consulta placa", "grátis", "veículo"]
-readTime: "4 min"
+tags: ["consulta placa", "grátis", "veículo", "placa mercosul", "placa clonada"]
+readTime: "7 min"
 featured: true
 author: RevelaPlaca
 faqs:
@@ -12,9 +12,15 @@ faqs:
     answer: "Sim. Marca, modelo, ano, cor, município e valor FIPE estão inclusos sem pagamento no RevelaPlaca."
   - question: "Preciso informar CPF para consultar?"
     answer: "Não. Basta a placa do veículo. Não exibimos dados do proprietário."
+  - question: "Por que a consulta não mostra o nome do dono?"
+    answer: "Nome, CPF e endereço do proprietário são dados pessoais protegidos pela LGPD. Nenhum serviço aberto ao público pode exibi-los sem base legal, e quem promete isso está oferecendo algo que não deveria entregar."
+  - question: "Os dados da consulta não batem com o carro que estou vendo. O que fazer?"
+    answer: "Não feche negócio. Divergência entre a placa e o veículo à sua frente é o principal indício de placa clonada ou de anúncio com foto de outro carro. Confira o chassi no vidro e no documento antes de qualquer pagamento."
 ---
 
-Consultar a placa antes de comprar ou vender um carro usado é um hábito simples que evita surpresas. Neste guia, explicamos como funciona a consulta gratuita no **RevelaPlaca** e o que você pode esperar ver no resultado.
+Consultar uma placa é a forma mais rápida de saber se o carro anunciado é mesmo
+o que o vendedor diz que é. Não exige cadastro, não exige CPF e leva segundos.
+Este guia mostra o que aparece, o que **não** aparece, e como ler o resultado.
 
 ## Formatos de placa aceitos
 
@@ -23,7 +29,32 @@ No Brasil existem dois padrões:
 - **Antigo:** três letras + quatro números (ex.: `ABC1234`)
 - **Mercosul:** três letras + um número + uma letra + dois números (ex.: `ABC1D23`)
 
-Digite com ou sem hífen — normalizamos automaticamente.
+O padrão Mercosul começou a ser adotado no Brasil em 2018. Ele não substituiu o
+antigo de uma vez: a troca acontece quando o veículo é emplacado pela primeira
+vez, muda de município ou de proprietário, ou quando a placa precisa ser
+substituída. Por isso os dois formatos convivem nas ruas e os dois funcionam
+aqui.
+
+Repare na diferença estrutural: no padrão antigo, as quatro posições finais são
+todas numéricas. No Mercosul, a **quinta posição é uma letra**. É só isso que
+distingue um do outro.
+
+Digite com ou sem hífen — normalizamos automaticamente, e também aceitamos
+letras minúsculas.
+
+### Os dois erros de digitação mais comuns
+
+Placa é sequência curta lida rápido, quase sempre de uma foto de anúncio. Dois
+pares de caracteres se confundem o tempo todo:
+
+- **Letra `O` e número `0`**
+- **Letra `I` e número `1`**
+
+A boa notícia é que a posição resolve a dúvida. As três primeiras posições são
+sempre letras, e a quarta é sempre número. Então em `ABC1D23`, aquele caractere
+depois das três letras **só pode ser o número 1**, nunca a letra I. E se um
+caractere que deveria ser número aparece como letra, a placa não é válida — o
+sistema recusa antes de consultar.
 
 ## O que vem na consulta grátis
 
@@ -34,18 +65,110 @@ A consulta básica mostra **dados do veículo**, nunca do proprietário:
 - Cor, combustível e município/UF de emplacamento
 - Valor de referência FIPE
 
-Essas informações vêm de **fontes públicas e parceiros autorizados**, sempre em conformidade com a LGPD.
+Essas informações vêm de **fontes públicas e parceiros autorizados**, sempre em
+conformidade com a LGPD.
+
+## O que a consulta não mostra — e por quê
+
+Esta parte importa tanto quanto a anterior. A consulta **não exibe**:
+
+- Nome do proprietário
+- CPF ou CNPJ
+- Endereço
+- Telefone
+
+Isso não é limitação técnica, é a lei. Nome, CPF e endereço são **dados
+pessoais** protegidos pela Lei Geral de Proteção de Dados. Um serviço aberto ao
+público não tem base legal para exibi-los a qualquer pessoa que digite uma
+placa.
+
+Vale dizer com todas as letras: se você encontrar um site que promete entregar o
+nome e o endereço do dono a partir da placa, ele está oferecendo algo que não
+deveria. Consumir esse tipo de serviço expõe você tanto quanto expõe o
+proprietário.
+
+Saber o histórico do carro não exige saber quem é o dono. São perguntas
+diferentes, e só uma delas é sua para fazer.
+
+## Como ler o resultado
+
+O resultado responde a uma pergunta simples: **o carro do anúncio é o carro da
+placa?**
+
+Compare o que apareceu na tela com o que está escrito no anúncio e, se possível,
+com o veículo à sua frente:
+
+| O que conferir | Onde bate |
+|---|---|
+| Marca e modelo | anúncio, documento e o próprio carro |
+| Ano de fabricação e ano modelo | anúncio e CRLV |
+| Cor | o carro — repintura não muda o registro |
+| Município/UF | onde o vendedor diz que o carro está |
+| Valor FIPE | o preço pedido |
+
+Quando tudo bate, você ganha confiança para seguir. Quando algo não bate, você
+ganhou algo mais valioso: um motivo para parar.
+
+### Quando os dados não batem
+
+Divergência entre a placa consultada e o carro à sua frente é o **principal
+indício de placa clonada**. Na clonagem, um veículo irregular recebe a placa de
+outro, legítimo e com histórico limpo — normalmente de um carro do mesmo modelo
+e cor, em outro estado.
+
+Sinais que pedem atenção redobrada:
+
+- A consulta retorna **outro modelo** ou **outra cor** que não a do carro
+- O **município de emplacamento** é muito distante de onde o carro está sendo
+  vendido, sem explicação
+- O **ano** não confere com o que o anúncio informa
+
+Nada disso é prova de crime — pode ser erro de cadastro, repintura registrada
+errada ou mudança recente. Mas nenhum desses casos justifica pressa. Confira o
+número do chassi no vidro dianteiro, no motor e no documento, e só siga se os
+três coincidirem.
+
+## Com que frequência os dados mudam
+
+Dados cadastrais de veículo mudam pouco: modelo, ano e chassi são fixos para
+sempre. Cor e município mudam quando há repintura registrada ou transferência.
+O que muda com frequência é o **valor FIPE**, atualizado mensalmente — por isso
+a consulta sempre mostra a referência usada.
+
+## Grátis, Detran ou relatório completo: qual usar
+
+| | Consulta grátis | Site do Detran | Relatório completo |
+|---|---|---|---|
+| Custo | R$ 0 | R$ 0 | R$ 24,90 |
+| Precisa de cadastro | não | varia por estado | não |
+| Dados do veículo | sim | sim | sim |
+| Valor FIPE | sim | não | sim |
+| Leilão e sinistro | não | não | sim |
+| Gravame e restrições | não | parcial | sim |
+| Débitos | não | sim | sim |
+
+A consulta grátis serve para **triagem**: separa o que vale visitar do que não
+vale. O Detran do seu estado é a fonte oficial para débitos e licenciamento. O
+relatório completo é para o momento em que você já decidiu que aquele carro é um
+candidato sério.
 
 ## Quando vale pedir o relatório completo
 
-Se você vai **fechar negócio**, o relatório pago (R$ 24,90) adiciona verificações que a consulta grátis não revela:
+Se você vai **fechar negócio**, o relatório pago (R$ 24,90) adiciona verificações
+que a consulta grátis não revela:
 
 - Histórico de leilão e remarketing
 - Indícios de sinistro
 - Roubo, furto e gravame
 - Restrições judiciais e débitos
 
-Se a ideia é comprar, o [checklist do que verificar antes de fechar negócio](/blog/o-que-verificar-antes-de-comprar-carro-usado) mostra onde cada uma dessas informações entra na decisão.
+Pense na proporção: são R$ 24,90 contra uma decisão de dezenas de milhares de
+reais. O relatório não precisa encontrar nada para ter valido — saber que não há
+apontamento também é informação.
+
+Se a ideia é comprar, o [checklist do que verificar antes de fechar
+negócio](/blog/o-que-verificar-antes-de-comprar-carro-usado) mostra onde cada
+uma dessas informações entra na decisão.
 
 ## Como consultar agora
 
@@ -54,4 +177,5 @@ Se a ideia é comprar, o [checklist do que verificar antes de fechar negócio](/
 3. Confirme a verificação anti-bot (Turnstile)
 4. Veja o resultado em segundos
 
-Pronto — sem cadastro e sem expor dados pessoais de terceiros. **O que o vendedor não conta, a placa revela.**
+Pronto — sem cadastro e sem expor dados pessoais de terceiros. **O que o vendedor
+não conta, a placa revela.**

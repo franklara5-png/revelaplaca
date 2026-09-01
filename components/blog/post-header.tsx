@@ -1,13 +1,6 @@
 import Link from "next/link";
 import { CATEGORY_LABELS, type BlogPostMeta } from "@/lib/blog";
-
-function formatarData(date: string) {
-  return new Date(date).toLocaleDateString("pt-BR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
+import { formatarDataPost } from "@/lib/blog/data-post";
 
 export function PostHeader({ post }: { post: BlogPostMeta }) {
   return (
@@ -24,7 +17,7 @@ export function PostHeader({ post }: { post: BlogPostMeta }) {
       <h1 className="rp-section-heading mt-4">{post.title}</h1>
       <p className="rp-body mt-4">{post.description}</p>
       <div className="mt-4 flex flex-wrap gap-3 text-sm text-rp-slate-500">
-        <time dateTime={post.date}>{formatarData(post.date)}</time>
+        <time dateTime={post.date}>{formatarDataPost(post.date)}</time>
         <span aria-hidden>·</span>
         <span>{post.readTime}</span>
         {post.author && (

@@ -1,13 +1,6 @@
 import Link from "next/link";
 import { CATEGORY_LABELS, type BlogPostMeta } from "@/lib/blog";
-
-function formatarData(date: string) {
-  return new Date(date).toLocaleDateString("pt-BR", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
+import { formatarDataPost } from "@/lib/blog/data-post";
 
 export function PostCard({ post }: { post: BlogPostMeta }) {
   return (
@@ -30,7 +23,7 @@ export function PostCard({ post }: { post: BlogPostMeta }) {
       <div className="mt-4 flex items-center gap-3 text-xs text-rp-slate-400">
         <span>{post.readTime}</span>
         <span aria-hidden>·</span>
-        <time dateTime={post.date}>{formatarData(post.date)}</time>
+        <time dateTime={post.date}>{formatarDataPost(post.date, "short")}</time>
       </div>
     </Link>
   );

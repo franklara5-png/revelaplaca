@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MDXRemote } from "next-mdx-remote/rsc";
+import remarkGfm from "remark-gfm";
 import {
   getAllPostSlugs,
   getPostBySlug,
@@ -130,7 +131,15 @@ export default async function BlogPostPage({
           <article className="min-w-0">
             <PostHeader post={post} />
             <div className="prose-rp">
-              <MDXRemote source={post.content} />
+              {/* remark-gfm: tabela nao e markdown padrao, e sim extensao GFM.
+                  Sem este plugin as tabelas dos posts saiam como texto cru na
+                  tela — "| Limitacao | Impacto |" literal, em producao. */}
+              <MDXRemote
+                source={post.content}
+                options={{
+                  mdxOptions: { remarkPlugins: [remarkGfm] },
+                }}
+              />
             </div>
           </article>
 
