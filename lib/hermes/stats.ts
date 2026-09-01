@@ -11,7 +11,8 @@ import { obterMetricasDashboard } from "@/lib/admin/stats";
 const INICIO_HOJE_SP = sql`(date_trunc('day', now() at time zone 'America/Sao_Paulo') at time zone 'America/Sao_Paulo')`;
 
 export type HermesIpEntry = {
-  ip: string;
+  /** sha256 do IP com salt. Nunca o endereco. */
+  ipHash: string;
   city?: string;
   region?: string;
   country?: string;
@@ -40,43 +41,48 @@ export async function getHermesStats(): Promise<HermesStats> {
   const [metricas, onlineRow, hojeRow, ultimaPorIp, viewsPorIp] = await Promise.all([
     obterMetricasDashboard("hoje"),
     db
-      .select({ total: sql<number>`count(distinct ${siteVisits.ip})::int` })
+      .select({ total: sql<number>`count(distinct ${siteVisits.ipHash})::int` })
       .from(siteVisits)
       .where(sql`${siteVisits.visitedAt} >= now() - interval '5 minutes'`)
       .then((rows) => rows[0]),
     db
-      .select({ total: sql<number>`count(distinct ${siteVisits.ip})::int` })
+      .select({ total: sql<number>`count(distinct ${siteVisits.ipHash})::int` })
       .from(siteVisits)
-      .where(and(gte(siteVisits.visitedAt, INICIO_HOJE_SP), isNotNull(siteVisits.ip)))
+      .where(and(gte(siteVisits.visitedAt, INICIO_HOJE_SP), isNotNull(siteVisits.ipHash)))
       .then((rows) => rows[0]),
     db
-      .selectDistinctOn([siteVisits.ip], {
-        ip: siteVisits.ip,
+      .selectDistinctOn([siteVisits.ipHash], {
+        ipHash: siteVisits.ipHash,
         city: siteVisits.city,
         region: siteVisits.region,
         country: siteVisits.country,
         lastAt: siteVisits.visitedAt,
       })
       .from(siteVisits)
-      .where(and(gte(siteVisits.visitedAt, INICIO_HOJE_SP), isNotNull(siteVisits.ip)))
-      .orderBy(siteVisits.ip, desc(siteVisits.visitedAt)),
+      .where(and(gte(siteVisits.visitedAt, INICIO_HOJE_SP), isNotNull(siteVisits.ipHash)))
+      .orderBy(siteVisits.ipHash, desc(siteVisits.visitedAt)),
     db
-      .select({ ip: siteVisits.ip, views: sql<number>`count(*)::int` })
+      .select({ ipHash: siteVisits.ipHash, views: sql<number>`count(*)::int` })
       .from(siteVisits)
-      .where(and(gte(siteVisits.visitedAt, INICIO_HOJE_SP), isNotNull(siteVisits.ip)))
-      .groupBy(siteVisits.ip),
+      .where(and(gte(siteVisits.visitedAt, INICIO_HOJE_SP), isNotNull(siteVisits.ipHash)))
+      .groupBy(siteVisits.ipHash),
   ]);
 
-  const viewsPorIpMap = new Map(viewsPorIp.map((r) => [r.ip as string, r.views]));
+  const viewsPorIpMap = new Map(
+    viewsPorIp.map((r) => [r.ipHash as string, r.views]),
+  );
 
   const ipsLista: HermesIpEntry[] = ultimaPorIp
-    .filter((r): r is typeof r & { ip: string; lastAt: Date } => Boolean(r.ip && r.lastAt))
+    .filter(
+      (r): r is typeof r & { ipHash: string; lastAt: Date } =>
+        Boolean(r.ipHash && r.lastAt),
+    )
     .map((r) => ({
-      ip: r.ip,
+      ipHash: r.ipHash,
       ...(r.city ? { city: r.city } : {}),
       ...(r.region ? { region: r.region } : {}),
       ...(r.country ? { country: r.country } : {}),
-      views: viewsPorIpMap.get(r.ip) ?? 1,
+      views: viewsPorIpMap.get(r.ipHash) ?? 1,
       lastAt: r.lastAt.toISOString(),
     }))
     .sort((a, b) => (a.lastAt < b.lastAt ? 1 : -1))

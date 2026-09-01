@@ -3,6 +3,8 @@ import { z } from "zod";
 import { getDb } from "@/db";
 import { siteVisits } from "@/db/schema";
 import { isBotUserAgent, isRotaPublica } from "@/lib/track/filtro";
+import { visitaRateLimitExcedido } from "@/lib/track/rate-limit";
+import { hashIp } from "@/lib/ip-hash";
 
 export const dynamic = "force-dynamic";
 
@@ -76,14 +78,30 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  const ip = getClientIp(request);
+  // Hash, nunca o endereco. Se o salt nao estiver configurado, hashIp lanca em
+  // producao — e a resposta certa e desistir da visita, NAO cair de volta no
+  // IP em claro. Metrica perdida custa menos que dado pessoal guardado errado.
+  let ipHash: string;
+  try {
+    ipHash = hashIp(getClientIp(request));
+  } catch (erro) {
+    console.error("[track/visit] sem IP_HASH_SALT, visita descartada:", erro);
+    return NextResponse.json({ ok: true });
+  }
+
+  // Trava de abuso: a rota e POST publico e sem autenticacao. Sem isto,
+  // qualquer um insere linha no banco em loop.
+  if (await visitaRateLimitExcedido(ipHash)) {
+    return NextResponse.json({ ok: true });
+  }
+
   const { city, region, country } = getLocationFromHeaders(request);
 
   try {
     await getDb()
       .insert(siteVisits)
       .values({
-        ip,
+        ipHash,
         path: body.path,
         referrer: body.referrer ?? null,
         userAgent,

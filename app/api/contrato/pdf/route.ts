@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { gerarContratoPdf } from "@/lib/contrato/gerar-pdf";
 import { validarContrato } from "@/lib/contrato/schema";
 import { registrarEvento } from "@/lib/eventos";
+import {
+  rateLimitEventosApiExcedido,
+  registrarHitEventosApi,
+} from "@/lib/eventos-rate-limit";
 import { formatarPlaca } from "@/lib/placa";
 
 export async function POST(request: Request) {
@@ -19,6 +23,16 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+
+  // Rota publica e sem autenticacao que gera PDF — e trabalho de CPU, faturado
+  // por CPU ativa na Vercel. Sem trava, um loop simples vira conta.
+  if (await rateLimitEventosApiExcedido()) {
+    return NextResponse.json(
+      { erro: "Muitos contratos gerados. Tente novamente mais tarde." },
+      { status: 429 },
+    );
+  }
+  await registrarHitEventosApi();
 
   try {
     const pdf = await gerarContratoPdf(dados);

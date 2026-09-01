@@ -153,15 +153,23 @@ export const fipeModelos = pgTable(
 );
 
 // ─── Hermes (tracking geral de visitas p/ dashboard interno) ──────────────────
-// Tabela nova e separada do antifraude (consultas/adminLoginTentativas/eventosApiRate
-// usam ip_hash). Aqui o IP fica em texto puro — cada visita é 1 INSERT, sem upsert;
-// a agregação "1 IP = 1 linha" acontece só na leitura (GROUP BY ip).
+// Cada visita é 1 INSERT, sem upsert; a agregação "1 visitante = 1 linha"
+// acontece só na leitura (GROUP BY ip_hash).
+//
+// O IP é gravado HASHEADO, igual ao resto do projeto (consultas,
+// adminLoginTentativas, eventosApiRate). Antes ficava em texto puro aqui, o
+// que identificava indivíduo quando somado a cidade, user-agent e histórico de
+// páginas — e contradizia a política de privacidade do site. Contagem de
+// visitantes distintos funciona igual com hash; só o endereço literal se perde.
 
 export const siteVisits = pgTable(
   "site_visits",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    ip: text("ip"),
+    // Hash, nunca o endereco. O nome da coluna diz isso de proposito: chamar
+    // de `ip` um campo que guarda hash e o tipo de armadilha que engana quem
+    // ler daqui a seis meses.
+    ipHash: text("ip_hash"),
     path: text("path"),
     referrer: text("referrer"),
     userAgent: text("user_agent"),
@@ -172,7 +180,7 @@ export const siteVisits = pgTable(
   },
   (table) => [
     index("idx_site_visits_visited_at").on(table.visitedAt),
-    index("idx_site_visits_ip").on(table.ip),
+    index("idx_site_visits_ip_hash").on(table.ipHash),
   ],
 );
 
