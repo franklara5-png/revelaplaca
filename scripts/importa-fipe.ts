@@ -24,8 +24,10 @@ import { slugify } from "../lib/slug";
 const API_BASE = "https://parallelum.com.br/fipe/api/v1/carros";
 const CHECKPOINT = ".fipe-checkpoint.json";
 
-// 6 e o teto pratico: a API v1 comeca a responder 429 acima de ~10 requisicoes
-// simultaneas. Medido em 22/08/2026.
+// Concorrencia NAO e o gargalo principal: acima de ~10 simultaneas a v1 responde
+// 429 de rajada, mas o limite que realmente manda e a COTA DIARIA (ver
+// CotaEsgotada abaixo). Baixar este numero nao aumenta a cota — so espalha o
+// mesmo consumo no tempo. Medido em 31/08/2026.
 const CONCURRENCY = Number(process.env.FIPE_IMPORT_CONCURRENCY ?? 6);
 const DELAY_MS = Number(process.env.FIPE_IMPORT_DELAY_MS ?? 0);
 const LOTE_INSERT = 200;
@@ -54,6 +56,24 @@ type LinhaFipe = typeof fipeModelos.$inferInsert;
 
 type ErroDefinitivo = Error & { definitivo?: boolean };
 
+/**
+ * A v1 tem COTA DIARIA, nao so limite de rajada: ao estourar, ela responde 429
+ * com Retry-After na casa das ~24h (medido: 86017s em 31/08/2026).
+ *
+ * Sem esta trava o script seguia moendo as ~100 marcas restantes, levando 429
+ * em todas e enchendo o log de falha inutil. Agora o primeiro 429 de cota
+ * derruba a execucao inteira: o checkpoint fica intacto e o operador recebe a
+ * hora exata em que pode retomar.
+ */
+let cotaEsgotadaEm: number | null = null;
+
+class CotaEsgotada extends Error {
+  constructor(public readonly segundos: number) {
+    super(`cota diaria da API esgotada; liberar em ~${Math.ceil(segundos / 3600)}h`);
+    this.name = "CotaEsgotada";
+  }
+}
+
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
 }
@@ -80,13 +100,26 @@ async function fetchJson<T>(url: string): Promise<T> {
   let ultimoErro: unknown;
 
   for (let tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
+    if (cotaEsgotadaEm !== null) throw new CotaEsgotada(cotaEsgotadaEm);
+
     try {
       const res = await fetch(url, {
         headers: { Accept: "application/json" },
         signal: AbortSignal.timeout(20_000),
       });
 
-      if (res.status === 429 || res.status >= 500) {
+      if (res.status === 429) {
+        const espera = Number(res.headers.get("retry-after") ?? 0);
+        // Retry-After curto e rajada, da para esperar. Longo e cota do dia:
+        // insistir so queima tentativa e atrasa o diagnostico.
+        if (espera > 300) {
+          cotaEsgotadaEm = espera;
+          throw new CotaEsgotada(espera);
+        }
+        throw new Error("HTTP 429");
+      }
+
+      if (res.status >= 500) {
         throw new Error(`HTTP ${res.status}`);
       }
       if (!res.ok) {
@@ -101,9 +134,12 @@ async function fetchJson<T>(url: string): Promise<T> {
       return json;
     } catch (erro) {
       ultimoErro = erro;
+      if (erro instanceof CotaEsgotada) throw erro;
       if ((erro as ErroDefinitivo).definitivo) throw erro;
       if (tentativa < MAX_TENTATIVAS) {
-        await sleep(500 * 2 ** (tentativa - 1));
+        // Backoff mais generoso: 2s, 6s, 18s. O anterior somava ~3,5s, curto
+        // demais para a janela de rajada desta API.
+        await sleep(2000 * 3 ** (tentativa - 1));
       }
     }
   }
@@ -207,6 +243,10 @@ async function main() {
       );
       modelos = resposta.modelos ?? [];
     } catch (erro) {
+      if (erro instanceof CotaEsgotada) {
+        await descarregar(true);
+        throw erro;
+      }
       console.warn(`x ${marca.nome}: ${(erro as Error).message}`);
       erros++;
       continue;
@@ -297,13 +337,28 @@ async function main() {
 }
 
 main().catch((erro) => {
-  const msg = (erro as Error)?.message ?? String(erro);
+  if (erro instanceof CotaEsgotada) {
+    const liberaEm = new Date(Date.now() + erro.segundos * 1000);
+    console.error(
+      `\nCOTA DIARIA DA API ESGOTADA.\n` +
+        `A parallelum v1 respondeu 429 com Retry-After de ${erro.segundos}s ` +
+        `(~${Math.ceil(erro.segundos / 3600)}h).\n` +
+        `Libera por volta de ${liberaEm.toLocaleString("pt-BR")}.\n\n` +
+        `O checkpoint esta intacto: rodar de novo depois desse horario retoma\n` +
+        `exatamente de onde parou, sem repetir o que ja entrou.\n` +
+        `Para gastar menos cota por dia: FIPE_IMPORT_CONCURRENCY=3\n`,
+    );
+    // exitCode em vez de exit(): com o handle HTTP do neon ainda aberto, o
+    // exit() abrupto derruba o libuv com assertion no Windows.
+    process.exitCode = 2;
+    return;
+  }
 
+  const msg = (erro as Error)?.message ?? String(erro);
   if (msg.includes("429")) {
     console.error(
-      "\nA API da FIPE esta limitando as requisicoes (HTTP 429).\n" +
-        "Espere alguns minutos e rode de novo — o checkpoint retoma de onde parou.\n" +
-        "Se persistir, baixe a concorrencia: FIPE_IMPORT_CONCURRENCY=3 npm run import:fipe",
+      "\nA API esta limitando as requisicoes (HTTP 429) em rajada.\n" +
+        "Espere alguns minutos e rode de novo — o checkpoint retoma de onde parou.",
     );
   } else {
     console.error(erro);

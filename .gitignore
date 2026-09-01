@@ -47,3 +47,6 @@ next-env.d.ts
 
 # checkpoint do importador FIPE (progresso local, nao versionar)
 .fipe-checkpoint.json
+
+# log da importacao FIPE
+fipe-import.log
