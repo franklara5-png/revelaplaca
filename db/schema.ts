@@ -84,7 +84,13 @@ export const adminLogs = pgTable(
 
 export const relatorios = pgTable("relatorios", {
   id: uuid("id").primaryKey().defaultRandom(),
-  pedidoId: uuid("pedido_id").references(() => pedidos.id),
+  // unique: um pedido gera no maximo UM relatorio. E a garantia de ultima
+  // instancia contra webhook reenviado pela Asaas — se a trava de aplicacao
+  // em processarPagamentoConfirmado falhar, o banco recusa o segundo insert
+  // antes de o cliente receber dois e-mails.
+  pedidoId: uuid("pedido_id")
+    .references(() => pedidos.id)
+    .unique(),
   placa: text("placa").notNull(),
   dados: jsonb("dados").notNull(),
   tokenAcesso: text("token_acesso").notNull().unique(),

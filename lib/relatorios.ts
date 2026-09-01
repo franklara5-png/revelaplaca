@@ -1,6 +1,6 @@
 import "server-only";
 
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { getDb } from "@/db";
 import { pedidos, relatorios } from "@/db/schema";
@@ -156,19 +156,37 @@ export async function processarPagamentoConfirmado(
   const pedido = await buscarPedido(pedidoId);
   if (!pedido) return { token: null, jaPago: false };
 
-  if (pedido.status === "pago") {
+  // A transicao para "pago" precisa ser ATOMICA.
+  //
+  // A Asaas reenvia webhook por desenho. Com a versao anterior — ler o status,
+  // depois gravar — duas entregas simultaneas passavam as duas pela checagem,
+  // gravavam as duas e chamavam gerarRelatorioParaPedido as duas vezes. E ali
+  // dentro esta `consultarComBackoff`, que e a chamada PAGA ao fornecedor
+  // premium. O resultado seria: dois relatorios para o mesmo pedido, dois
+  // e-mails para o cliente e a consulta paga DUAS vezes por uma venda so.
+  //
+  // O UPDATE condicional resolve no banco: so uma das entregas encontra o
+  // pedido ainda nao-pago, e so ela gera. As demais caem no ramo de leitura.
+  const marcados = await getDb()
+    .update(pedidos)
+    .set({ status: "pago", pagoEm: new Date() })
+    .where(and(eq(pedidos.id, pedidoId), ne(pedidos.status, "pago")))
+    .returning({ id: pedidos.id });
+
+  const euMarquei = marcados.length > 0;
+
+  if (!euMarquei) {
+    // Ja estava pago (ou outra entrega ganhou a corrida agora).
     const relatorio = await buscarRelatorioPorPedido(pedidoId);
     if (relatorio) {
       return { token: relatorio.tokenAcesso, jaPago: true };
     }
+    // Pago sem relatorio: pode ser a corrida ainda em curso na outra entrega,
+    // ou uma geracao que falhou antes. gerarRelatorioParaPedido tem a propria
+    // checagem de existente, entao e seguro chamar.
     const gerado = await gerarRelatorioParaPedido(pedidoId);
     return { token: gerado?.token ?? null, jaPago: true };
   }
-
-  await getDb()
-    .update(pedidos)
-    .set({ status: "pago", pagoEm: new Date() })
-    .where(eq(pedidos.id, pedidoId));
 
   void registrarEvento("pagamento_confirmado", { placa: pedido.placa });
 
