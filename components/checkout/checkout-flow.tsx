@@ -163,11 +163,15 @@ export function CheckoutFlow({ placa, veiculoResumo, pedidoRetomada, defaultEmai
         </div>
 
         <div className="mt-4">
-          <label className="text-xs font-semibold uppercase tracking-wide text-rp-slate-400">
+          <label
+            htmlFor="pix-payload"
+            className="text-xs font-semibold uppercase tracking-wide text-rp-slate-400"
+          >
             Pix copia e cola
           </label>
           <div className="mt-2 flex gap-2">
             <Input
+              id="pix-payload"
               readOnly
               value={pix.payload}
               className="text-xs normal-case tracking-normal"

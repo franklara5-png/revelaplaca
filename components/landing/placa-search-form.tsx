@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { Button, Input } from "@/components/ui";
@@ -18,6 +18,11 @@ export function PlacaSearchForm({
   const [placa, setPlaca] = useState("");
   const [erro, setErro] = useState("");
 
+  // O formulario aparece duas vezes na home (hero e CTA final), entao um id
+  // fixo geraria id duplicado no DOM e o <label for> apontaria para o campo
+  // errado. useId da um por instancia.
+  const campoId = useId();
+
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     const normalizada = normalizarPlaca(placa);
@@ -33,8 +38,14 @@ export function PlacaSearchForm({
 
   return (
     <form id={id} onSubmit={handleSubmit} className="w-full max-w-xl">
+      {/* Placeholder nao e rotulo: some quando a pessoa digita e nao satisfaz
+          leitor de tela. Rotulo real, escondido visualmente. */}
+      <label htmlFor={campoId} className="sr-only">
+        Placa do veículo
+      </label>
       <div className="flex flex-col gap-3 sm:flex-row">
         <Input
+          id={campoId}
           type="text"
           inputMode="text"
           autoComplete="off"
@@ -48,7 +59,7 @@ export function PlacaSearchForm({
             if (erro) setErro("");
           }}
           aria-invalid={!!erro}
-          aria-describedby={erro ? "placa-erro" : undefined}
+          aria-describedby={erro ? `${campoId}-erro` : undefined}
         />
         <Button type="submit" size="lg" className="shrink-0 sm:px-8">
           <Search className="h-4 w-4" />
@@ -56,7 +67,7 @@ export function PlacaSearchForm({
         </Button>
       </div>
       {erro && (
-        <p id="placa-erro" className="mt-2 text-sm text-rp-red-500">
+        <p id={`${campoId}-erro`} className="mt-2 text-sm text-rp-red-500">
           {erro}
         </p>
       )}

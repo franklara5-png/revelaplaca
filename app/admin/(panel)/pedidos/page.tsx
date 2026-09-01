@@ -28,6 +28,7 @@ export default async function AdminPedidosPage({
         <form method="get" action="/admin/pedidos" className="flex flex-wrap gap-3">
           <Input
             name="busca"
+            aria-label="Buscar pedido por placa ou e-mail"
             placeholder="Placa ou e-mail"
             defaultValue={params.busca}
             className="max-w-xs normal-case tracking-normal"
