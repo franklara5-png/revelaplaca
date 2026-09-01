@@ -7,46 +7,49 @@ type Props = {
   textClassName?: string;
 };
 
+/**
+ * Marca RevelaPlaca — "metade revelada".
+ *
+ * A placa partida ao meio: a esquerda e o que o anuncio mostra (dois blocos de
+ * caractere), a direita e o bloco solido do que estava escondido.
+ *
+ * Desenhada so com formas solidas, sem opacidade empilhada e sem clipPath. Isso
+ * e o que faz ela sobreviver a 16px de favicon e a preto e branco — e, de
+ * quebra, elimina o id duplicado no DOM que a versao anterior criava por
+ * renderizar no header e no rodape da mesma pagina.
+ *
+ * Geometria de referencia num canvas 64x64: a placa ocupa x 3..61, y 18..46
+ * (proporcao ~2:1, contra 1,4:1 da versao antiga). O viewBox abaixo e esse
+ * retangulo recortado, para o simbolo nao carregar respiro vertical inutil
+ * quando fica ao lado do texto.
+ */
 export function LogoIcon({ className }: { className?: string }) {
   return (
     <svg
-      viewBox="0 0 44 30"
+      viewBox="3 17 58 30"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={cn("h-7 w-11 shrink-0", className)}
+      className={cn("h-7 w-[54px] shrink-0", className)}
       aria-hidden
     >
-      <rect
-        x="1"
-        y="1"
-        width="34"
-        height="24"
-        rx="4"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-      <rect x="1" y="1" width="34" height="7" rx="4" fill="currentColor" opacity="0.15" />
-      <clipPath id="rp-lens-reveal">
-        <circle cx="30" cy="19" r="8" />
-      </clipPath>
-      <g clipPath="url(#rp-lens-reveal)">
-        <rect x="1" y="1" width="34" height="24" rx="4" fill="currentColor" opacity="0.4" />
-        <rect x="1" y="1" width="34" height="7" rx="4" fill="currentColor" opacity="0.55" />
-      </g>
-      <circle
-        cx="30"
-        cy="19"
-        r="8"
-        stroke="currentColor"
-        strokeWidth="2"
-        fill="none"
-      />
+      {/* metade revelada */}
       <path
-        d="M36 25L41 28"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
+        d="M32 22h20.5a4.5 4.5 0 0 1 4.5 4.5v11a4.5 4.5 0 0 1-4.5 4.5H32z"
+        fill="currentColor"
       />
+      {/* corpo da placa */}
+      <rect
+        x="5"
+        y="20"
+        width="54"
+        height="24"
+        rx="6"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+      {/* o que o anuncio mostra */}
+      <rect x="13" y="29" width="13" height="4" rx="2" fill="currentColor" />
+      <rect x="13" y="36" width="9" height="4" rx="2" fill="currentColor" />
     </svg>
   );
 }
