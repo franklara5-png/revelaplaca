@@ -5,6 +5,7 @@ import {
   SITE_NAME,
   SITE_TAGLINE,
 } from "./site-url";
+import { PRECO_RELATORIO_REAIS } from "./constants/pagamento";
 
 export type SeoMetadataInput = {
   title: string;
@@ -30,6 +31,42 @@ export function getOrganizationJsonLd() {
     logo: `${siteUrl}/icon.svg`,
     slogan: SITE_TAGLINE,
     description: SITE_DESCRIPTION,
+  };
+}
+
+/**
+ * Produto pago (relatorio completo).
+ *
+ * O site vende um relatorio de R$ 24,90 e nao declarava nenhum dado
+ * estruturado de comercio — o preco so existia no HTML, invisivel para o
+ * Google.
+ *
+ * Sem aggregateRating e sem review: inventar nota media e o caminho mais curto
+ * para uma penalidade manual, e nao ha avaliacao real coletada ainda. As seis
+ * verificacoes listadas sao as de SECOES_RELATORIO, nao uma promessa de
+ * marketing.
+ */
+export function getRelatorioProdutoJsonLd() {
+  const siteUrl = getSiteUrl();
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "@id": `${siteUrl}/#relatorio-completo`,
+    name: "Relatório veicular completo",
+    description:
+      "Histórico completo do veículo pela placa: leilão e remarketing, sinistro, roubo e furto, gravame, restrições e débitos.",
+    category: "Consulta veicular",
+    url: `${siteUrl}/exemplo`,
+    brand: { "@id": `${siteUrl}/#organization` },
+    offers: {
+      "@type": "Offer",
+      price: PRECO_RELATORIO_REAIS.toFixed(2),
+      priceCurrency: "BRL",
+      availability: "https://schema.org/InStock",
+      url: `${siteUrl}/#consultar`,
+      seller: { "@id": `${siteUrl}/#organization` },
+    },
   };
 }
 

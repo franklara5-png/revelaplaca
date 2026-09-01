@@ -1,5 +1,5 @@
 import { ExemploBanner, ExemploCta, RelatorioView } from "@/components/relatorio";
-import { getSeoMetadata } from "@/lib/seo";
+import { getRelatorioProdutoJsonLd, getSeoMetadata } from "@/lib/seo";
 import { PLACA_EXEMPLO, relatorioExemploNormalizado } from "@/lib/relatorio/exemplo";
 import { formatarPlaca } from "@/lib/placa";
 import { Placa3D } from "@/components/brand";
@@ -18,6 +18,14 @@ export default function ExemploPage() {
   return (
     <div className="px-4 pb-20 pt-28">
       <div className="mx-auto max-w-3xl">
+        {/* Esta e a pagina que apresenta o produto pago — o Product/Offer
+            pertence aqui tanto quanto na home. */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(getRelatorioProdutoJsonLd()),
+          }}
+        />
         <p className="rp-section-eyebrow">Exemplo</p>
         <div aria-hidden className="mt-6">
           <Placa3D placa={PLACA_EXEMPLO} size="md" />

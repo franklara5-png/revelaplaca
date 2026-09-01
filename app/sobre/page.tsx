@@ -4,7 +4,10 @@ import { getSeoMetadata } from "@/lib/seo";
 import { SITE_NAME, SITE_TAGLINE } from "@/lib/site-url";
 
 export const metadata: Metadata = getSeoMetadata({
-  title: `Sobre o ${SITE_NAME}`,
+  // Sem o nome da marca aqui: o template do layout ja acrescenta
+  // "| RevelaPlaca". Com `Sobre o ${SITE_NAME}` o titulo saia duplicado
+  // ("Sobre o RevelaPlaca | RevelaPlaca").
+  title: "Sobre",
   description: `Conheça o ${SITE_NAME}: ${SITE_TAGLINE} Operado pela Altivia Tecnologia e Serviços Digitais LTDA.`,
   path: "/sobre",
 });

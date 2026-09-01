@@ -11,6 +11,7 @@ import { Section } from "@/components/ui";
 import {
   getOrganizationJsonLd,
   getSeoMetadata,
+  getRelatorioProdutoJsonLd,
   getWebSiteJsonLd,
 } from "@/lib/seo";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE } from "@/lib/site-url";
@@ -35,6 +36,12 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(getWebSiteJsonLd()),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(getRelatorioProdutoJsonLd()),
         }}
       />
       <FaqJsonLd />

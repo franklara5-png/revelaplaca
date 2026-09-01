@@ -288,8 +288,8 @@ export default function GuiaCompraCarroUsadoPage() {
                 🚩 Urgência excessiva
               </h3>
               <p className="mt-1 text-sm text-rp-slate-600">
-                "Tem outro comprador vindo amanhã", "preciso vender hoje".
-                Pressa é a principal arma do golpista.
+                &ldquo;Tem outro comprador vindo amanhã&rdquo;, &ldquo;preciso
+                vender hoje&rdquo;. Pressa é a principal arma do golpista.
               </p>
             </Card>
             <Card className="border-l-4 border-l-red-400">

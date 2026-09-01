@@ -38,7 +38,7 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 
   if (status === "pago") {
-    let relatorio = await buscarRelatorioPorPedido(id);
+    const relatorio = await buscarRelatorioPorPedido(id);
     if (!relatorio) {
       const gerado = await gerarRelatorioParaPedido(id);
       relatorioToken = gerado?.token ?? null;
