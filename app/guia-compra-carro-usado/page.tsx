@@ -18,7 +18,7 @@ import { getSeoMetadata } from "@/lib/seo";
 import { SITE_NAME } from "@/lib/site-url";
 
 export const metadata = getSeoMetadata({
-  title: "Guia de Compra de Carro Usado | Checklist e Dicas 2026",
+  title: "Comprar carro usado: checklist 2026",
   description:
     "Guia completo para comprar carro usado em 2026: checklist, consulta de placa, como evitar golpes e dicas para negociar o melhor preço com segurança.",
   path: "/guia-compra-carro-usado",

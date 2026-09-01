@@ -6,7 +6,7 @@ import { formatarPlaca, normalizarPlaca, validarPlaca } from "@/lib/placa";
 import { buscarVeiculoCache, veiculoParaResposta } from "@/lib/veiculos";
 
 export const metadata = getSeoMetadata({
-  title: "Contrato de compra e venda de veículo (PDF grátis)",
+  title: "Contrato de compra e venda de veículo (PDF)",
   description:
     "Gere um modelo de contrato de compra e venda de carro em PDF. Preencha os dados, baixe e imprima. Pré-preenchimento pela placa quando disponível.",
   path: "/contrato-compra-venda-veiculo",

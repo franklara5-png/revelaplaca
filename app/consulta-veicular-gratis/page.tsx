@@ -5,7 +5,7 @@ import { getSeoMetadata } from "@/lib/seo";
 import { SITE_NAME } from "@/lib/site-url";
 
 export const metadata = getSeoMetadata({
-  title: "Consulta Veicular Grátis | Como Puxar Dados do Veículo",
+  title: "Consulta veicular grátis pela placa",
   description:
     "Faça consulta veicular grátis pela placa: descubra marca, modelo, ano, cor e valor FIPE. Relatório completo opcional com leilão, sinistro e restrições.",
   path: "/consulta-veicular-gratis",
