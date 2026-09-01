@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { Loader2, ShieldCheck } from "lucide-react";
@@ -11,21 +11,36 @@ type Props = {
   placa: string;
 };
 
+/**
+ * Portao anti-bot da consulta gratuita.
+ *
+ * A consulta dispara SOZINHA assim que o Turnstile devolve o token. Antes o
+ * visitante clicava "Revelar gratis" na home, era levado para ca, resolvia o
+ * desafio e ainda precisava clicar de novo — tres passos para receber o que
+ * a home prometia em um. O botao continua existindo como saida manual quando
+ * algo falha.
+ */
 export function ConsultaTurnstileGate({ placa }: Props) {
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
+  // O Turnstile renova o token sozinho de tempos em tempos. Sem esta trava,
+  // uma consulta que falhou seria refeita a cada renovacao — e cada tentativa
+  // custa uma chamada ao fornecedor, que e paga.
+  const jaDisparou = useRef(false);
+
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const turnstileAtivo = Boolean(siteKey);
 
-  async function consultar() {
+  const consultar = useCallback(async () => {
     if (turnstileAtivo && !token) {
       setErro("Complete a verificação de segurança antes de continuar.");
       return;
     }
 
+    jaDisparou.current = true;
     setCarregando(true);
     setErro(null);
 
@@ -53,7 +68,16 @@ export function ConsultaTurnstileGate({ placa }: Props) {
     } finally {
       setCarregando(false);
     }
-  }
+  }, [placa, router, token, turnstileAtivo]);
+
+  useEffect(() => {
+    if (!turnstileAtivo) return;
+    if (!token) return;
+    if (jaDisparou.current || carregando) return;
+    void consultar();
+  }, [token, turnstileAtivo, carregando, consultar]);
+
+  const aguardandoVerificacao = turnstileAtivo && !token && !erro;
 
   return (
     <Card className="mx-auto max-w-lg text-center">
@@ -61,17 +85,17 @@ export function ConsultaTurnstileGate({ placa }: Props) {
         <ShieldCheck className="h-6 w-6" />
       </div>
       <h2 className="mt-4 text-xl font-bold text-rp-slate-900">
-        Confirmar consulta da placa {formatarPlaca(placa)}
+        Consulta da placa {formatarPlaca(placa)}
       </h2>
       <p className="mt-2 text-sm text-rp-slate-600">
-        Para proteger nossos servidores contra bots, confirme que você é humano.
-        A consulta básica continua gratuita.
+        Uma verificação rápida contra robôs e a consulta começa sozinha. A
+        consulta básica é gratuita.
       </p>
 
       {turnstileAtivo ? (
         <div className="mt-6 flex justify-center">
           <Turnstile
-            siteKey={siteKey!}
+            siteKey={siteKey as string}
             onSuccess={setToken}
             onExpire={() => setToken(null)}
             onError={() => {
@@ -93,17 +117,30 @@ export function ConsultaTurnstileGate({ placa }: Props) {
         </p>
       )}
 
+      {/* aria-live: com o disparo automatico, o unico sinal de que algo esta
+          acontecendo e a mudanca deste texto. */}
+      <div aria-live="polite" className="sr-only">
+        {carregando ? "Consultando a placa." : ""}
+      </div>
+
       <Button
         className="mt-6 w-full"
         size="lg"
-        disabled={carregando || (turnstileAtivo && !token)}
-        onClick={consultar}
+        disabled={carregando || aguardandoVerificacao}
+        onClick={() => {
+          jaDisparou.current = false;
+          void consultar();
+        }}
       >
         {carregando ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
             Consultando…
           </>
+        ) : aguardandoVerificacao ? (
+          "Verificando…"
+        ) : erro ? (
+          "Tentar de novo"
         ) : (
           "Consultar agora"
         )}
