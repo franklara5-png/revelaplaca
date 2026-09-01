@@ -73,6 +73,103 @@ export async function listarModelosPorMarca(
     .orderBy(asc(sql`min(${fipeModelos.modelo})`));
 }
 
+export type DestaqueMarca = {
+  modelo: string;
+  slugModelo: string;
+  ano: number;
+  valor: number;
+};
+
+export type ResumoMarca = {
+  totalModelos: number;
+  totalRegistros: number;
+  anoMin: number | null;
+  anoMax: number | null;
+  valorMin: number;
+  valorMax: number;
+  referencia: string | null;
+  maisBarato: DestaqueMarca | null;
+  maisCaro: DestaqueMarca | null;
+};
+
+/**
+ * Retrato da marca a partir das proprias linhas importadas.
+ *
+ * Mesma razao de calcularEstatisticasModelo: sem isto cada uma das ~107
+ * paginas de marca teria como conteudo proprio apenas o nome da marca e UMA
+ * frase sorteada entre tres. Elas sao as paginas que distribuem autoridade
+ * para as de modelo — precisam valer a visita por si.
+ */
+export async function resumirMarca(
+  slugMarca: string,
+): Promise<ResumoMarca | null> {
+  if (!dbOk()) return null;
+
+  const db = getDb();
+
+  const [agregado] = await db
+    .select({
+      totalModelos: sql<number>`count(distinct ${fipeModelos.slugModelo})::int`,
+      totalRegistros: sql<number>`count(*)::int`,
+      // 32000 e o marcador de 0 km: entra no preco, mas nao no intervalo de anos.
+      anoMin: sql<number | null>`min(${fipeModelos.ano}) filter (where ${fipeModelos.ano} <> ${ANO_ZERO_KM})`,
+      anoMax: sql<number | null>`max(${fipeModelos.ano}) filter (where ${fipeModelos.ano} <> ${ANO_ZERO_KM})`,
+      valorMin: sql<string | null>`min(${fipeModelos.valor})`,
+      valorMax: sql<string | null>`max(${fipeModelos.valor})`,
+      referencia: sql<string | null>`min(${fipeModelos.referencia})`,
+    })
+    .from(fipeModelos)
+    .where(eq(fipeModelos.slugMarca, slugMarca));
+
+  if (!agregado || agregado.totalRegistros === 0) return null;
+
+  const destaque = async (direcao: "asc" | "desc") => {
+    const [row] = await db
+      .select({
+        modelo: fipeModelos.modelo,
+        slugModelo: fipeModelos.slugModelo,
+        ano: fipeModelos.ano,
+        valor: fipeModelos.valor,
+      })
+      .from(fipeModelos)
+      .where(
+        and(
+          eq(fipeModelos.slugMarca, slugMarca),
+          sql`${fipeModelos.valor} is not null`,
+        ),
+      )
+      .orderBy(
+        direcao === "asc" ? asc(fipeModelos.valor) : desc(fipeModelos.valor),
+      )
+      .limit(1);
+
+    if (!row?.valor) return null;
+    return {
+      modelo: row.modelo,
+      slugModelo: row.slugModelo,
+      ano: row.ano,
+      valor: Number(row.valor),
+    };
+  };
+
+  const [maisBarato, maisCaro] = await Promise.all([
+    destaque("asc"),
+    destaque("desc"),
+  ]);
+
+  return {
+    totalModelos: agregado.totalModelos,
+    totalRegistros: agregado.totalRegistros,
+    anoMin: agregado.anoMin,
+    anoMax: agregado.anoMax,
+    valorMin: Number(agregado.valorMin ?? 0),
+    valorMax: Number(agregado.valorMax ?? 0),
+    referencia: agregado.referencia,
+    maisBarato,
+    maisCaro,
+  };
+}
+
 export async function buscarModelo(
   slugMarca: string,
   slugModelo: string,
@@ -233,20 +330,4 @@ export function formatarValorFipe(valor: string | number | null | undefined): st
   const n = typeof valor === "number" ? valor : Number(valor);
   if (!Number.isFinite(n)) return "—";
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-export function textoVariado(
-  seed: string,
-  variantes: string[],
-  substituicoes: Record<string, string>,
-): string {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    hash = (hash + seed.charCodeAt(i) * (i + 1)) % variantes.length;
-  }
-  let texto = variantes[hash] ?? variantes[0];
-  for (const [chave, valor] of Object.entries(substituicoes)) {
-    texto = texto.replaceAll(`{${chave}}`, valor);
-  }
-  return texto;
 }
