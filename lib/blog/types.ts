@@ -18,6 +18,17 @@ export interface BlogPostMeta {
   title: string;
   description: string;
   date: string;
+  /**
+   * Data da ultima revisao relevante do texto, quando houve.
+   *
+   * Separada de `date` porque o schema BlogPosting usava a MESMA data em
+   * datePublished e dateModified — ou seja, o site afirmava que nenhum post
+   * jamais foi tocado. Reescrever um artigo sem atualizar isto faz o Google
+   * continuar tratando o conteudo como antigo.
+   *
+   * Vazio significa "nunca revisado", e ai dateModified volta a ser `date`.
+   */
+  updated?: string;
   category: BlogCategory;
   tags: string[];
   readTime: string;

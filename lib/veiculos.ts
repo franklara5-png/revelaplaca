@@ -6,7 +6,6 @@ import { veiculos } from "@/db/schema";
 import type { ConsultaBasica } from "@/lib/fornecedores/types";
 import { fornecedorBasico } from "@/lib/fornecedores/basico";
 import { sanitizarDados } from "@/lib/fornecedores/sanitize";
-import { slugify } from "@/lib/slug";
 
 const TTL_DIAS = 30;
 

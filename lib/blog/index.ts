@@ -45,6 +45,10 @@ function parsePostFile(filename: string): BlogPost {
     title: String(data.title ?? ""),
     description: String(data.description ?? ""),
     date: dateFromFrontmatter || mtime.toISOString().slice(0, 10),
+    updated:
+      typeof data.updated === "string" && data.updated.trim()
+        ? String(data.updated).trim()
+        : undefined,
     category: data.category as BlogCategory,
     tags: Array.isArray(data.tags) ? data.tags.map(String) : [],
     readTime: String(data.readTime ?? ""),
@@ -106,7 +110,11 @@ export function getAllPostSlugs(): string[] {
 
 /** Compatível com sitemap (async) — exclui drafts. */
 export async function listarPostsBlog(): Promise<
-  Array<{ slug: string; date: string }>
+  Array<{ slug: string; date: string; updated?: string }>
 > {
-  return getAllPosts().map((post) => ({ slug: post.slug, date: post.date }));
+  return getAllPosts().map((post) => ({
+    slug: post.slug,
+    date: post.date,
+    updated: post.updated,
+  }));
 }

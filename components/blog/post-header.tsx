@@ -18,6 +18,17 @@ export function PostHeader({ post }: { post: BlogPostMeta }) {
       <p className="rp-body mt-4">{post.description}</p>
       <div className="mt-4 flex flex-wrap gap-3 text-sm text-rp-slate-500">
         <time dateTime={post.date}>{formatarDataPost(post.date)}</time>
+        {post.updated && post.updated !== post.date && (
+          <>
+            <span aria-hidden>·</span>
+            <span>
+              atualizado em{" "}
+              <time dateTime={post.updated}>
+                {formatarDataPost(post.updated)}
+              </time>
+            </span>
+          </>
+        )}
         <span aria-hidden>·</span>
         <span>{post.readTime}</span>
         {post.author && (

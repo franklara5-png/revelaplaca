@@ -8,7 +8,6 @@ if (!input) {
 }
 
 const bcrypt = await import("bcryptjs");
-const salt = randomBytes(16).toString("hex");
 const hash = await bcrypt.hash(input, 12);
 
 console.log("\nAdicione ao .env.local / Vercel:\n");

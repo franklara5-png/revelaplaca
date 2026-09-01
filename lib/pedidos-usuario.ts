@@ -1,8 +1,6 @@
 import { eq, desc } from "drizzle-orm";
 import { getDb } from "@/db";
 import { pedidos, relatorios } from "@/db/schema";
-import { formatarPlaca } from "@/lib/placa";
-import { PRECO_RELATORIO_REAIS } from "@/lib/constants/pagamento";
 
 export async function getPedidosPorEmail(email: string) {
   const db = getDb();

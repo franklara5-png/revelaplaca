@@ -5,7 +5,6 @@ import { FileText, Clock, CheckCircle, XCircle, ShoppingCart, AlertCircle } from
 import { getSession } from "@/lib/get-session";
 import { getPedidosPorEmail } from "@/lib/pedidos-usuario";
 import { formatarPlaca } from "@/lib/placa";
-import { PRECO_RELATORIO_REAIS } from "@/lib/constants/pagamento";
 import { getSeoMetadata } from "@/lib/seo";
 import { LogoutButton } from "./LogoutButton";
 

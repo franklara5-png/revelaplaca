@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { FipeBreadcrumb } from "@/components/fipe";
 import { Card } from "@/components/ui";
 import { getSeoMetadata } from "@/lib/seo";

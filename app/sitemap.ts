@@ -77,7 +77,10 @@ async function montarTodasUrls(): Promise<SitemapItem[]> {
   // Posts MDX publicados (drafts já filtrados em listarPostsBlog)
   const posts = await listarPostsBlog();
   for (const post of posts) {
-    const lastModified = post.date ? new Date(post.date) : undefined;
+    // lastModified do sitemap segue a revisao, nao a publicacao: e o sinal que
+    // diz ao crawler que vale revisitar.
+    const referencia = post.updated ?? post.date;
+    const lastModified = referencia ? new Date(referencia) : undefined;
     urls.push({
       loc: `/blog/${post.slug}`,
       lastModified:

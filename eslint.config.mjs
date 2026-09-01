@@ -13,6 +13,21 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    rules: {
+      // Descartar uma chave no destructuring (`const { content: _, ...meta }`)
+      // e uso legitimo, nao variavel esquecida. Sem esta regra o aviso ficava
+      // permanente e servia de ruido para esconder os avisos que importam.
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;
