@@ -19,8 +19,19 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={`${inter.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-rp-bg text-rp-ink">
+        {/* Primeiro elemento focavel da pagina: quem navega por teclado pula o
+            menu inteiro em vez de tabular por ele em toda visita. Invisivel
+            ate receber foco. */}
+        <a
+          href="#conteudo"
+          className="sr-only rounded-full bg-rp-primary px-4 py-2 text-sm font-semibold text-white focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60]"
+        >
+          Pular para o conteúdo
+        </a>
         <Header />
-        <main className="flex-1">{children}</main>
+        <main id="conteudo" className="flex-1">
+          {children}
+        </main>
         <Footer />
         <VisitTracker />
         <Analytics />
