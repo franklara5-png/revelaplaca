@@ -5,9 +5,14 @@ import { StatCard } from "@/components/admin/stat-card";
 import { GraficoBarras } from "@/components/admin/grafico-barras";
 import { Card } from "@/components/ui";
 import { FunilFunnel } from "@/components/admin/funil-funnel";
+import { ReceitaPorPeriodo } from "@/components/admin/receita-por-periodo";
 import { parsePeriodo } from "@/lib/admin/periodo";
 import { obterFunilConversao } from "@/lib/admin/funil";
-import { obterGrafico14Dias, obterMetricasDashboard } from "@/lib/admin/stats";
+import {
+  obterGrafico14Dias,
+  obterMetricasDashboard,
+  obterReceitaPorPeriodo,
+} from "@/lib/admin/stats";
 
 export default async function AdminDashboardPage({
   searchParams,
@@ -19,6 +24,7 @@ export default async function AdminDashboardPage({
   const metricas = await obterMetricasDashboard(periodo);
   const grafico = await obterGrafico14Dias();
   const funil = await obterFunilConversao(periodo);
+  const { porMes, porAno } = await obterReceitaPorPeriodo();
 
   const fmt = (centavos: number) =>
     (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -69,6 +75,8 @@ export default async function AdminDashboardPage({
           <GraficoBarras dados={grafico} />
         </div>
       </Card>
+
+      <ReceitaPorPeriodo porMes={porMes} porAno={porAno} />
     </div>
   );
 }

@@ -99,6 +99,169 @@ export async function obterGrafico14Dias() {
   });
 }
 
+const MESES_PT = [
+  "jan",
+  "fev",
+  "mar",
+  "abr",
+  "mai",
+  "jun",
+  "jul",
+  "ago",
+  "set",
+  "out",
+  "nov",
+  "dez",
+];
+
+function anoMesAtualSP(): { ano: number; mes: number } {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+  }).formatToParts(new Date());
+  return {
+    ano: Number(parts.find((p) => p.type === "year")!.value),
+    mes: Number(parts.find((p) => p.type === "month")!.value),
+  };
+}
+
+function chaveAnoMesSP(data: Date): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+  }).formatToParts(data);
+  const ano = parts.find((p) => p.type === "year")!.value;
+  const mes = parts.find((p) => p.type === "month")!.value;
+  return `${ano}-${mes}`;
+}
+
+function anoSP(data: Date): number {
+  return Number(
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Sao_Paulo",
+      year: "numeric",
+    }).format(data),
+  );
+}
+
+export type ReceitaMes = {
+  chave: string;
+  label: string;
+  pedidos: number;
+  receitaCentavos: number;
+  ticketMedioCentavos: number;
+};
+
+export type ReceitaAno = {
+  ano: number;
+  pedidos: number;
+  receitaCentavos: number;
+  ticketMedioCentavos: number;
+};
+
+/**
+ * Receita paga agrupada por mês (últimos 12) e por ano (últimos 5), em
+ * America/Sao_Paulo. Reaproveita `pedidos.valorCentavos` com status='pago' —
+ * mesma fonte de `obterMetricasDashboard`, sem tabela/paralela nova.
+ */
+export async function obterReceitaPorPeriodo(): Promise<{
+  porMes: ReceitaMes[];
+  porAno: ReceitaAno[];
+}> {
+  const db = getDb();
+
+  const linhasMes = await db
+    .select({
+      periodoInicio: sql<string>`(date_trunc('month', coalesce(${pedidos.pagoEm}, ${pedidos.criadoEm}) at time zone 'America/Sao_Paulo') at time zone 'America/Sao_Paulo')`,
+      pedidos: sql<number>`count(*)::int`,
+      receitaCentavos: sql<number>`coalesce(sum(${pedidos.valorCentavos}), 0)::int`,
+    })
+    .from(pedidos)
+    .where(
+      and(
+        eq(pedidos.status, "pago"),
+        sql`coalesce(${pedidos.pagoEm}, ${pedidos.criadoEm}) >= (date_trunc('month', now() at time zone 'America/Sao_Paulo') at time zone 'America/Sao_Paulo' - interval '11 months')`,
+      ),
+    )
+    .groupBy(sql`1`)
+    .orderBy(sql`1 desc`);
+
+  const linhasAno = await db
+    .select({
+      periodoInicio: sql<string>`(date_trunc('year', coalesce(${pedidos.pagoEm}, ${pedidos.criadoEm}) at time zone 'America/Sao_Paulo') at time zone 'America/Sao_Paulo')`,
+      pedidos: sql<number>`count(*)::int`,
+      receitaCentavos: sql<number>`coalesce(sum(${pedidos.valorCentavos}), 0)::int`,
+    })
+    .from(pedidos)
+    .where(
+      and(
+        eq(pedidos.status, "pago"),
+        sql`coalesce(${pedidos.pagoEm}, ${pedidos.criadoEm}) >= (date_trunc('year', now() at time zone 'America/Sao_Paulo') at time zone 'America/Sao_Paulo' - interval '4 years')`,
+      ),
+    )
+    .groupBy(sql`1`)
+    .orderBy(sql`1 desc`);
+
+  const mapMes = new Map(
+    linhasMes.map((r) => [
+      chaveAnoMesSP(new Date(r.periodoInicio)),
+      { pedidos: r.pedidos, receitaCentavos: r.receitaCentavos },
+    ]),
+  );
+
+  const mapAno = new Map(
+    linhasAno.map((r) => [
+      anoSP(new Date(r.periodoInicio)),
+      { pedidos: r.pedidos, receitaCentavos: r.receitaCentavos },
+    ]),
+  );
+
+  const { ano: anoAtual, mes: mesAtual } = anoMesAtualSP();
+
+  const porMes: ReceitaMes[] = [];
+  for (let i = 0; i < 12; i++) {
+    let mes = mesAtual - i;
+    let ano = anoAtual;
+    while (mes < 1) {
+      mes += 12;
+      ano -= 1;
+    }
+    const chave = `${ano}-${String(mes).padStart(2, "0")}`;
+    const dado = mapMes.get(chave);
+    const pedidosCount = dado?.pedidos ?? 0;
+    const receitaCentavos = dado?.receitaCentavos ?? 0;
+    porMes.push({
+      chave,
+      label: `${MESES_PT[mes - 1]}/${String(ano).slice(2)}`,
+      pedidos: pedidosCount,
+      receitaCentavos,
+      ticketMedioCentavos:
+        pedidosCount > 0 ? Math.round(receitaCentavos / pedidosCount) : 0,
+    });
+  }
+
+  const porAno: ReceitaAno[] = [];
+  for (let i = 0; i < 5; i++) {
+    const ano = anoAtual - i;
+    const dado = mapAno.get(ano);
+    const pedidosCount = dado?.pedidos ?? 0;
+    const receitaCentavos = dado?.receitaCentavos ?? 0;
+    porAno.push({
+      ano,
+      pedidos: pedidosCount,
+      receitaCentavos,
+      ticketMedioCentavos:
+        pedidosCount > 0 ? Math.round(receitaCentavos / pedidosCount) : 0,
+    });
+  }
+
+  // porMes/porAno saem com o mais recente primeiro (uso direto nas tabelas);
+  // quem for desenhar gráfico cronológico deve inverter a ordem.
+  return { porMes, porAno };
+}
+
 export async function contarPagosSemRelatorio(): Promise<number> {
   const db = getDb();
   const [row] = await db
