@@ -1,6 +1,7 @@
 import { CheckCircle2, XCircle } from "lucide-react";
 import { Card } from "@/components/ui";
 import { formatarPlaca } from "@/lib/placa";
+import { Placa3D } from "@/components/brand";
 import type { RelatorioNormalizado } from "@/lib/relatorio/types";
 import { RelatorioResumo } from "./relatorio-resumo";
 import { SecaoRelatorioCard } from "./secao-relatorio";
@@ -9,19 +10,37 @@ type Props = {
   resumo: RelatorioNormalizado;
   banner?: React.ReactNode;
   rodape?: React.ReactNode;
+  /**
+   * 1 quando esta view e o assunto principal da pagina (/relatorio/[token]).
+   * 2 quando a pagina ja tem o proprio h1 — caso de /exemplo, que antes
+   * ficava com dois h1 na mesma pagina.
+   */
+  nivelTitulo?: 1 | 2;
 };
 
-export function RelatorioView({ resumo, banner, rodape }: Props) {
+export function RelatorioView({
+  resumo,
+  banner,
+  rodape,
+  nivelTitulo = 1,
+}: Props) {
   const placaFmt = formatarPlaca(resumo.placa);
   const algumProblema = resumo.totalApontamentos > 0;
+  const Titulo = nivelTitulo === 1 ? "h1" : "h2";
 
   return (
     <div className="space-y-6">
       {banner}
 
       <Card className="bg-rp-primary-900 text-white">
-        <p className="text-sm text-rp-primary-100">Raio-X RevelaPlaca</p>
-        <h1 className="mt-1 text-2xl font-bold">Placa {placaFmt}</h1>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <p className="text-sm text-rp-primary-100">Raio-X RevelaPlaca</p>
+          <div aria-hidden>
+            {/* Sem sombra: o card e escuro e a sombra viraria uma mancha. */}
+            <Placa3D placa={resumo.placa} size="sm" sombra={false} />
+          </div>
+        </div>
+        <Titulo className="mt-3 text-2xl font-bold">Placa {placaFmt}</Titulo>
         <p className="mt-3 text-sm text-rp-primary-100">
           {algumProblema
             ? "Foram encontrados registros que merecem atenção. Analise cada seção abaixo."

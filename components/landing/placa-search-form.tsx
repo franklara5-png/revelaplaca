@@ -6,7 +6,14 @@ import { Search } from "lucide-react";
 import { Button, Input } from "@/components/ui";
 import { normalizarPlaca, validarPlaca } from "@/lib/placa";
 
-export function PlacaSearchForm({ id }: { id?: string }) {
+export function PlacaSearchForm({
+  id,
+  /** Avisa o que esta sendo digitado. O hero usa para espelhar na placa 3D. */
+  onPlacaChange,
+}: {
+  id?: string;
+  onPlacaChange?: (placa: string) => void;
+}) {
   const router = useRouter();
   const [placa, setPlaca] = useState("");
   const [erro, setErro] = useState("");
@@ -37,6 +44,7 @@ export function PlacaSearchForm({ id }: { id?: string }) {
           value={placa}
           onChange={(e) => {
             setPlaca(e.target.value);
+            onPlacaChange?.(e.target.value);
             if (erro) setErro("");
           }}
           aria-invalid={!!erro}

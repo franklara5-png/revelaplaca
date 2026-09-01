@@ -1,4 +1,4 @@
-import { PlacaSearchForm } from "./placa-search-form";
+import { HeroPlaca } from "./hero-placa";
 import { Shield, CheckCircle2 } from "lucide-react";
 import { SITE_DESCRIPTION, SITE_TAGLINE } from "@/lib/site-url";
 
@@ -21,8 +21,8 @@ export function Hero() {
         </h1>
         <p className="rp-body mx-auto mt-6 max-w-2xl">{SITE_DESCRIPTION}</p>
 
-        <div className="mt-10 flex justify-center">
-          <PlacaSearchForm id="consultar" />
+        <div className="mt-12">
+          <HeroPlaca />
         </div>
 
         <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">

@@ -7,6 +7,7 @@ import {
   VehicleJsonLd,
 } from "@/components/consulta";
 import { FaqJsonLd } from "@/components/landing/faq";
+import { Placa3D } from "@/components/brand";
 import { getSeoMetadata } from "@/lib/seo";
 import { getSiteUrl, SITE_NAME } from "@/lib/site-url";
 import { formatarPlaca, normalizarPlaca, validarPlaca } from "@/lib/placa";
@@ -75,7 +76,10 @@ export default async function ConsultaVeicularPage({ params }: PageProps) {
       <div className="px-4 pb-20 pt-28">
         <div className="mx-auto max-w-3xl text-center">
           <p className="rp-section-eyebrow">Consulta veicular</p>
-          <h1 className="rp-section-heading mt-2">
+          <div aria-hidden className="mt-6 flex justify-center">
+            <Placa3D placa={placa} size="md" />
+          </div>
+          <h1 className="rp-section-heading mt-8">
             Placa {formatarPlaca(placa)}
           </h1>
           <p className="rp-body mx-auto mt-4 max-w-xl">

@@ -9,6 +9,7 @@ import { enviarEventoCliente } from "@/components/analytics/track-evento";
 import { Button, Card, Input } from "@/components/ui";
 import { PRECO_RELATORIO_REAIS } from "@/lib/constants/pagamento";
 import { formatarPlaca } from "@/lib/placa";
+import { Placa3D } from "@/components/brand";
 
 type PixData = {
   encodedImage: string;
@@ -216,7 +217,10 @@ export function CheckoutFlow({ placa, veiculoResumo, pedidoRetomada, defaultEmai
   return (
     <Card>
       <p className="rp-section-eyebrow">Relatório completo</p>
-      <h2 className="mt-1 text-xl font-bold text-rp-slate-900">
+      <div aria-hidden className="mt-4">
+        <Placa3D placa={placa} size="sm" />
+      </div>
+      <h2 className="mt-6 text-xl font-bold text-rp-slate-900">
         Placa {formatarPlaca(placa)}
       </h2>
       {veiculoResumo && (

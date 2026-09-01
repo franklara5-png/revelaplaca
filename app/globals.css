@@ -66,6 +66,15 @@
   --color-rp-red-500: rgb(var(--rp-red-500));
 }
 
+/* As classes .rp-* precisam viver em @layer components.
+   Fora de camada elas vencem QUALQUER utility do Tailwind, por mais especifica
+   que seja — regra de cascata: CSS sem camada sempre ganha de CSS em camada.
+   Era por isso que <Card className="bg-rp-primary-900 text-white"> renderizava
+   branco no branco no relatorio pago: o background de .rp-card ganhava da
+   utility e sobrava texto branco em fundo branco. Sao 7 componentes que tentam
+   trocar o fundo do Card e eram todos ignorados em silencio. */
+@layer components {
+
 .rp-card {
   border-radius: var(--rp-radius);
   box-shadow: var(--rp-shadow-card);
@@ -120,6 +129,8 @@
   );
 }
 
+} /* fim @layer components */
+
 body {
   background: rgb(var(--rp-bg));
   color: rgb(var(--rp-ink));
@@ -129,3 +140,80 @@ body {
 .prose-rp {
   @apply prose prose-slate max-w-none prose-headings:text-rp-ink prose-a:text-rp-primary-700 prose-a:no-underline hover:prose-a:underline;
 }
+
+/* ─── Linguagem 3D ──────────────────────────────────────────────────────────
+   Profundidade feita só com transform/box-shadow. Sem biblioteca, sem asset:
+   o hero é o LCP da home e não pode carregar JS de cena 3D. */
+
+:root {
+  --rp-perspective: 1100px;
+  --rp-placa-espessura: 13px;
+  /* Azul da tarja Mercosul. Fora da paleta da marca de propósito: a placa
+     imita um objeto real, não um componente do site. */
+  --rp-placa-azul: 16 42 122;
+  --rp-placa-corpo: 249 250 251;
+  --rp-placa-borda: 17 24 39;
+
+  --rp-shadow-3d:
+    0 2px 4px rgb(15 23 42 / 0.06),
+    0 8px 16px rgb(15 23 42 / 0.08),
+    0 24px 48px rgb(15 23 42 / 0.12);
+}
+
+/* Mesma razao do bloco de cima: em camada, para que utilities do Tailwind
+   consigam sobrescrever quando preciso. */
+@layer components {
+
+/* Palco. O filho é quem gira. */
+.rp-cena-3d {
+  perspective: var(--rp-perspective);
+  perspective-origin: 50% 40%;
+}
+
+/* Objeto 3D genérico: lê --rx/--ry, que o wrapper interativo escreve inline.
+   Sem JS os dois caem em 0deg e o objeto renderiza reto — o HTML do servidor
+   já é a versão final, o cursor só enriquece. */
+.rp-objeto-3d {
+  --rx: 0deg;
+  --ry: 0deg;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx)) rotateY(var(--ry));
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+/* Enquanto o cursor está em cima, seguir sem transição (senão fica borrachudo);
+   ao sair, a transição acima devolve suave ao repouso. */
+.rp-objeto-3d[data-ativo="true"] {
+  transition: none;
+}
+
+/* Relevo nos cards do site inteiro. */
+.rp-card {
+  transform-style: preserve-3d;
+  transition:
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.rp-card:hover {
+  transform: translateY(-3px) scale(1.006);
+  box-shadow: var(--rp-shadow-3d);
+}
+
+/* Quem pediu menos movimento recebe a profundidade estática, sem animação. */
+@media (prefers-reduced-motion: reduce) {
+  .rp-objeto-3d,
+  .rp-card {
+    transition: none;
+  }
+  .rp-objeto-3d {
+    --rx: 0deg !important;
+    --ry: 0deg !important;
+  }
+  .rp-card:hover {
+    transform: none;
+  }
+}
+
+} /* fim @layer components (3D) */

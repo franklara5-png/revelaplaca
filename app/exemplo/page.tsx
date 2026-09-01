@@ -2,6 +2,7 @@ import { ExemploBanner, ExemploCta, RelatorioView } from "@/components/relatorio
 import { getSeoMetadata } from "@/lib/seo";
 import { PLACA_EXEMPLO, relatorioExemploNormalizado } from "@/lib/relatorio/exemplo";
 import { formatarPlaca } from "@/lib/placa";
+import { Placa3D } from "@/components/brand";
 
 export const metadata = getSeoMetadata({
   title: "Exemplo de relatório veicular completo",
@@ -18,7 +19,10 @@ export default function ExemploPage() {
     <div className="px-4 pb-20 pt-28">
       <div className="mx-auto max-w-3xl">
         <p className="rp-section-eyebrow">Exemplo</p>
-        <h1 className="rp-section-heading mt-2">
+        <div aria-hidden className="mt-6">
+          <Placa3D placa={PLACA_EXEMPLO} size="md" />
+        </div>
+        <h1 className="rp-section-heading mt-8">
           Relatório completo — {formatarPlaca(PLACA_EXEMPLO)}
         </h1>
         <p className="rp-body mt-4">
@@ -29,6 +33,7 @@ export default function ExemploPage() {
         <div className="mt-10">
           <RelatorioView
             resumo={resumo}
+            nivelTitulo={2}
             banner={<ExemploBanner />}
             rodape={<div className="mt-8"><ExemploCta /></div>}
           />
