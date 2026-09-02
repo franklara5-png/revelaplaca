@@ -3,6 +3,12 @@ import { z } from "zod";
 import { getDb } from "@/db";
 import { siteVisits } from "@/db/schema";
 import { isBotUserAgent, isRotaPublica } from "@/lib/track/filtro";
+import {
+  ehEnderecoLocal,
+  pareceBot,
+  pareceDatacenter,
+  pareceEstrangeiroSemCidade,
+} from "@/lib/track/agente";
 import { visitaRateLimitExcedido } from "@/lib/track/rate-limit";
 import { hashIp } from "@/lib/ip-hash";
 
@@ -52,10 +58,13 @@ function getCountryName(iso: string | null): string | null {
 }
 
 function getLocationFromHeaders(req: Request) {
+  const iso = req.headers.get("x-vercel-ip-country");
   return {
     city: decodeHeader(req.headers.get("x-vercel-ip-city")),
     region: decodeHeader(req.headers.get("x-vercel-ip-country-region")),
-    country: getCountryName(req.headers.get("x-vercel-ip-country")),
+    // O ISO cru vale para a classificação; a coluna guarda o nome em pt-BR.
+    countryIso: iso ? iso.toUpperCase() : null,
+    country: getCountryName(iso),
   };
 }
 
@@ -74,7 +83,28 @@ export async function POST(request: Request) {
   }
 
   const userAgent = request.headers.get("user-agent");
-  if (isBotUserAgent(userAgent)) {
+  // Duas listas de propósito: `isBotUserAgent` é a do filtro compartilhado com
+  // o client (pega whatsapp, telegram, vercel-cron); `pareceBot` é a lista que
+  // a LEITURA também usa (pega GoogleOther e os outros rastreadores que não
+  // trazem "bot" no nome). Quem for bot para qualquer uma das duas não entra.
+  if (isBotUserAgent(userAgent) || pareceBot(userAgent)) {
+    return NextResponse.json({ ok: true });
+  }
+
+  const ip = getClientIp(request);
+  // Rede local/privada: eu mesmo, ou requisição interna. Conferido antes do
+  // hash porque depois do hash o endereço não dá mais para inspecionar.
+  if (ehEnderecoLocal(ip)) {
+    return NextResponse.json({ ok: true });
+  }
+
+  const { city, region, countryIso, country } = getLocationFromHeaders(request);
+  // Varredor moderno se declara Chrome, então o user-agent não basta: o que
+  // entrega é de ONDE ele fala. Ver lib/track/agente.ts.
+  if (
+    pareceDatacenter(city, region, countryIso) ||
+    pareceEstrangeiroSemCidade(city, countryIso)
+  ) {
     return NextResponse.json({ ok: true });
   }
 
@@ -83,7 +113,7 @@ export async function POST(request: Request) {
   // IP em claro. Metrica perdida custa menos que dado pessoal guardado errado.
   let ipHash: string;
   try {
-    ipHash = hashIp(getClientIp(request));
+    ipHash = hashIp(ip);
   } catch (erro) {
     console.error("[track/visit] sem IP_HASH_SALT, visita descartada:", erro);
     return NextResponse.json({ ok: true });
@@ -94,8 +124,6 @@ export async function POST(request: Request) {
   if (await visitaRateLimitExcedido(ipHash)) {
     return NextResponse.json({ ok: true });
   }
-
-  const { city, region, country } = getLocationFromHeaders(request);
 
   try {
     await getDb()

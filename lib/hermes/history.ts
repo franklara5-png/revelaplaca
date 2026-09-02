@@ -4,6 +4,7 @@ import { and, eq, isNotNull, sql, type SQL } from "drizzle-orm";
 import { getDb } from "@/db";
 import { pedidos, siteVisits } from "@/db/schema";
 import { obterReceitaPorPeriodo } from "@/lib/admin/stats";
+import { E_GENTE } from "@/lib/hermes/gente";
 
 export type HermesHistoryEntry = {
   /** "YYYY-MM" no bloco mensal, "YYYY" no anual — sempre America/Sao_Paulo. */
@@ -47,6 +48,9 @@ function chaveAno(coluna: SQL) {
  * anteriores saem 0 porque as linhas não existem mais, não porque ninguém
  * visitou. Linhas antigas com ip_hash nulo (anteriores ao hash) também ficam de
  * fora — mesmo filtro que getHermesStats já aplica.
+ *
+ * Também passa por E_GENTE (lib/hermes/gente.ts), pelo mesmo motivo de
+ * getHermesStats: linha de datacenter já gravada não some sozinha.
  */
 async function visitantesPorPeriodo(): Promise<{
   mensal: Map<string, number>;
@@ -66,6 +70,7 @@ async function visitantesPorPeriodo(): Promise<{
         and(
           isNotNull(siteVisits.ipHash),
           sql`${siteVisits.visitedAt} >= ${INICIO_JANELA_MESES}`,
+          E_GENTE,
         ),
       )
       .groupBy(sql`1`),
@@ -79,6 +84,7 @@ async function visitantesPorPeriodo(): Promise<{
         and(
           isNotNull(siteVisits.ipHash),
           sql`${siteVisits.visitedAt} >= ${INICIO_JANELA_ANOS}`,
+          E_GENTE,
         ),
       )
       .groupBy(sql`1`),
