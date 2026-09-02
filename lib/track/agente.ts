@@ -80,16 +80,18 @@ export const CIDADES_DATACENTER = [
  * falhou (a rota cai de volta no ISO). Comparar contra uma lista só em ISO
  * deixaria a regra inteira passando batido.
  *
- * Então cada país é comparado nas duas formas. O nome vem do mesmo `Intl` que
- * a escrita usa (para bater exatamente com o que foi gravado) e também de uma
- * tabela fixa, que cobre o caso de o ICU do runtime que gravou não ser o mesmo
- * que o do runtime que lê.
+ * Então cada país é comparado em todas as grafias possíveis. O nome vem do
+ * mesmo `Intl` que a escrita usa (para bater exatamente com o que foi gravado)
+ * e também de uma tabela fixa, que cobre o caso de o ICU do runtime que gravou
+ * não ser o mesmo que o do runtime que lê. O nome em inglês está na tabela
+ * porque Node compilado com small-icu não tem os dados de pt-BR e devolve
+ * "United States" — a gravação vira inglês sem ninguém pedir.
  */
-const NOME_FIXO_DO_PAIS: Record<string, string> = {
-  US: "Estados Unidos",
-  CA: "Canadá",
-  DE: "Alemanha",
-  BR: "Brasil",
+const NOMES_FIXOS_DO_PAIS: Record<string, string[]> = {
+  US: ["Estados Unidos", "United States"],
+  CA: ["Canadá", "Canada"],
+  DE: ["Alemanha", "Germany"],
+  BR: ["Brasil", "Brazil"],
 };
 
 const nomesPt = (() => {
@@ -100,11 +102,9 @@ const nomesPt = (() => {
   }
 })();
 
-/** ISO + nome em pt-BR: todas as grafias sob as quais o país pode ter sido gravado. */
+/** ISO e nome: todas as grafias sob as quais o país pode ter sido gravado. */
 export function formasDoPais(iso: string): string[] {
-  const formas = new Set<string>([iso]);
-  const fixo = NOME_FIXO_DO_PAIS[iso];
-  if (fixo) formas.add(fixo);
+  const formas = new Set<string>([iso, ...(NOMES_FIXOS_DO_PAIS[iso] ?? [])]);
   try {
     const doIntl = nomesPt?.of(iso);
     if (doIntl) formas.add(doIntl);
