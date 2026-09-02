@@ -34,6 +34,13 @@ export function ConsultaTurnstileGate({ placa }: Props) {
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const turnstileAtivo = Boolean(siteKey);
 
+  // Sem site key em PRODUCAO o portao e intransponivel: a API nao aplica o
+  // bypass de desenvolvimento, entao validarTurnstile("") sempre recusa e toda
+  // consulta volta 403. Antes a tela mostrava "modo desenvolvimento" para o
+  // visitante e oferecia um botao que so podia falhar — mensagem interna
+  // vazando e clique convidando para o erro.
+  const indisponivel = !turnstileAtivo && process.env.NODE_ENV === "production";
+
   const consultar = useCallback(async () => {
     if (turnstileAtivo && !token) {
       setErro("Complete a verificação de segurança antes de continuar.");
@@ -88,8 +95,9 @@ export function ConsultaTurnstileGate({ placa }: Props) {
         Consulta da placa {formatarPlaca(placa)}
       </h2>
       <p className="mt-2 text-sm text-rp-slate-600">
-        Uma verificação rápida contra robôs e a consulta começa sozinha. A
-        consulta básica é gratuita.
+        {indisponivel
+          ? "Enquanto isso, você pode navegar pela Tabela FIPE ou pelos guias do blog."
+          : "Uma verificação rápida contra robôs e a consulta começa sozinha. A consulta básica é gratuita."}
       </p>
 
       {turnstileAtivo ? (
@@ -105,6 +113,14 @@ export function ConsultaTurnstileGate({ placa }: Props) {
             options={{ theme: "light", size: "normal" }}
           />
         </div>
+      ) : indisponivel ? (
+        <p
+          className="mt-4 rounded-xl bg-rp-amber-500/10 px-4 py-3 text-sm text-rp-slate-600"
+          role="status"
+        >
+          A consulta gratuita está temporariamente indisponível. Já estamos
+          verificando — tente novamente em alguns minutos.
+        </p>
       ) : (
         <p className="mt-4 rounded-xl bg-rp-amber-500/10 px-4 py-3 text-sm text-rp-slate-600">
           Turnstile não configurado — modo desenvolvimento.
@@ -123,28 +139,32 @@ export function ConsultaTurnstileGate({ placa }: Props) {
         {carregando ? "Consultando a placa." : ""}
       </div>
 
-      <Button
-        className="mt-6 w-full"
-        size="lg"
-        disabled={carregando || aguardandoVerificacao}
-        onClick={() => {
-          jaDisparou.current = false;
-          void consultar();
-        }}
-      >
-        {carregando ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Consultando…
-          </>
-        ) : aguardandoVerificacao ? (
-          "Verificando…"
-        ) : erro ? (
-          "Tentar de novo"
-        ) : (
-          "Consultar agora"
-        )}
-      </Button>
+      {/* Sem Turnstile em producao o botao so levaria a 403. Melhor nao
+          oferecer o clique do que oferecer um que nao pode dar certo. */}
+      {!indisponivel && (
+        <Button
+          className="mt-6 w-full"
+          size="lg"
+          disabled={carregando || aguardandoVerificacao}
+          onClick={() => {
+            jaDisparou.current = false;
+            void consultar();
+          }}
+        >
+          {carregando ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Consultando…
+            </>
+          ) : aguardandoVerificacao ? (
+            "Verificando…"
+          ) : erro ? (
+            "Tentar de novo"
+          ) : (
+            "Consultar agora"
+          )}
+        </Button>
+      )}
     </Card>
   );
 }
