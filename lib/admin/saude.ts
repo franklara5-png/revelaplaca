@@ -7,6 +7,10 @@ const ENVS_CRITICAS = [
   "FORNECEDOR_BASICO_URL",
   "FORNECEDOR_PREMIUM_URL",
   "NEXT_PUBLIC_TURNSTILE_SITE_KEY",
+  // Sem esta, o hash de IP e reversivel — por isso o codigo recusa operar em
+  // producao sem ela. Estava faltando desta lista, entao /admin/saude nunca
+  // apontava a ausencia.
+  "IP_HASH_SALT",
   "TURNSTILE_SECRET_KEY",
   "BREVO_API_KEY",
   "CRON_SECRET",

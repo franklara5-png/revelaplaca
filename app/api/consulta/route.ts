@@ -54,7 +54,22 @@ export async function POST(request: Request) {
     );
   }
 
-  const ipHash = await obterIpHash();
+  // Sem IP_HASH_SALT o hash lanca (de proposito, para nunca guardar hash
+  // reversivel). Aqui NAO da para seguir inerte: sem hash nao ha rate limit, e
+  // a chamada seguinte e paga. Entao recusa com 503 legivel em vez de 500.
+  let ipHash: string;
+  try {
+    ipHash = await obterIpHash();
+  } catch (erro) {
+    console.error("[consulta] IP_HASH_SALT ausente — consulta recusada:", erro);
+    return NextResponse.json(
+      {
+        erro:
+          "A consulta está temporariamente indisponível. Tente novamente em instantes.",
+      },
+      { status: 503 },
+    );
+  }
 
   if (await rateLimitExcedido(ipHash)) {
     return NextResponse.json(
