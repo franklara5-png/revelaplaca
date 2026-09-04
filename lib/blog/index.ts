@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
 import type { BlogPost, BlogPostMeta, BlogCategory } from "./types";
+import { BLOG_CATEGORIES, isBlogCategory } from "./types";
 
 export type { BlogPost, BlogPostMeta, BlogCategory, BlogFaq } from "./types";
 export {
@@ -28,6 +29,20 @@ function parseFaqs(data: Record<string, unknown>): BlogPost["faqs"] {
     .filter((faq) => faq.question && faq.answer);
 }
 
+/**
+ * Categoria invalida no frontmatter vira "guias" e grita no log, em vez de
+ * passar adiante e quebrar em silencio la na frente.
+ */
+function categoriaValida(valor: unknown, slug: string): BlogCategory {
+  if (typeof valor === "string" && isBlogCategory(valor)) return valor;
+
+  console.warn(
+    `[blog] categoria invalida em "${slug}": ${JSON.stringify(valor)}. ` +
+      `Usando "guias". Validas: ${BLOG_CATEGORIES.join(", ")}.`,
+  );
+  return "guias";
+}
+
 function parsePostFile(filename: string): BlogPost {
   const slug = filename.replace(/\.mdx$/, "");
   const filePath = path.join(POSTS_DIR, filename);
@@ -49,7 +64,13 @@ function parsePostFile(filename: string): BlogPost {
       typeof data.updated === "string" && data.updated.trim()
         ? String(data.updated).trim()
         : undefined,
-    category: data.category as BlogCategory,
+    // `as BlogCategory` era um cast cego: qualquer string no frontmatter
+    // passava. O post do IPVA usava "legislacao", que nao existe em
+    // BLOG_CATEGORIES — resultado: o chip de categoria saia vazio e
+    // getRelatedPosts nunca casava, deixando o post como beco sem saida com
+    // "Nenhum post relacionado ainda". Nada reclamava, nem o build.
+    // isBlogCategory ja existia e so nao era usada aqui.
+    category: categoriaValida(data.category, slug),
     tags: Array.isArray(data.tags) ? data.tags.map(String) : [],
     readTime: String(data.readTime ?? ""),
     featured: Boolean(data.featured),
