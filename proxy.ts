@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-
-const COOKIE_NAME = "cp_admin_session";
+import { COOKIE_NAME, validarSessaoAdmin } from "@/lib/admin/session";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -24,16 +23,20 @@ export async function proxy(request: NextRequest) {
 
   const token = request.cookies.get(COOKIE_NAME)?.value;
 
-  // Admin login: redirect to /admin if already has a session cookie
+  // Admin login: redirect to /admin if already has a session VÁLIDA
+  // (antes só checava se o cookie existia — qualquer valor, ate invalido,
+  // passava. Isso deixava /admin inteiro aberto pra quem so setasse o
+  // cookie manualmente, sem saber a senha.)
   if (pathname === "/admin/login") {
-    if (token) {
+    if (await validarSessaoAdmin(token)) {
       return NextResponse.redirect(new URL("/admin", request.url));
     }
     return NextResponse.next();
   }
 
-  // Other admin routes: block if no session cookie
-  if (!token) {
+  // Other admin routes: block unless a sessao valida (JWT assinado e nao
+  // expirado, ver lib/admin/session.ts) acompanha o cookie.
+  if (!(await validarSessaoAdmin(token))) {
     const login = new URL("/admin/login", request.url);
     login.searchParams.set("next", pathname);
     return NextResponse.redirect(login);
