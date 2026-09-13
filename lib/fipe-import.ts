@@ -10,7 +10,7 @@
  */
 import type { NeonHttpDatabase } from "drizzle-orm/neon-http";
 import { sql } from "drizzle-orm";
-import { fipeModelos } from "@/db/schema";
+import { fipeModelos, fipeImportProgresso } from "@/db/schema";
 import { slugify } from "@/lib/slug";
 
 // `any` no generic: script CLI usa `drizzle(neon(url))` sem schema, a rota de
@@ -151,6 +151,30 @@ export async function emParalelo<T>(
 
 export function buscarMarcas(cota: EstadoCota) {
   return fetchJson<MarcaV1[]>(`${API_BASE}/marcas`, cota);
+}
+
+/**
+ * Checkpoint em `fipe_import_progresso`, unico pra CLI e cron — antes o
+ * script CLI guardava progresso num .fipe-checkpoint.json local, e o cron
+ * (que roda em filesystem efemero no Vercel) so podia usar a tabela. Dois
+ * checkpoints separados faziam o CLI reimportar do zero marcas que o cron
+ * ja tinha feito (e vice-versa), queimando cota do dia a toa.
+ */
+export async function lerMarcasConcluidas(db: AnyNeonDb): Promise<Set<string>> {
+  const rows = await db
+    .select({ codigo: fipeImportProgresso.codigoMarca })
+    .from(fipeImportProgresso);
+  return new Set(rows.map((r) => r.codigo));
+}
+
+export async function marcarMarcaConcluida(
+  db: AnyNeonDb,
+  marca: MarcaV1,
+): Promise<void> {
+  await db
+    .insert(fipeImportProgresso)
+    .values({ codigoMarca: marca.codigo, nomeMarca: marca.nome })
+    .onConflictDoNothing({ target: fipeImportProgresso.codigoMarca });
 }
 
 /** Grava um lote em `fipe_modelos`, atualizando em conflito de PK. */

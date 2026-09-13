@@ -8,48 +8,33 @@
  *   npm run import:fipe                        # tudo (demora - ver README)
  *   FIPE_IMPORT_LIMIT=3 npm run import:fipe    # so as 3 primeiras marcas (teste)
  *   FIPE_IMPORT_CONCURRENCY=10 npm run import:fipe
- *   FIPE_IMPORT_RESET=1 npm run import:fipe    # ignora o checkpoint e recomeca
+ *   FIPE_IMPORT_RESET=1 npm run import:fipe    # reimporta mesmo as ja concluidas
  *
- * O progresso e salvo em .fipe-checkpoint.json a cada marca concluida, entao da
- * para interromper com Ctrl+C e retomar de onde parou.
- *
- * Ha tambem um cron em app/api/cron/importa-fipe/route.ts que resume essa
- * mesma importacao automaticamente todo dia, com checkpoint na tabela
- * `fipe_import_progresso` em vez de arquivo local (o filesystem do Vercel e
- * efemero). Este script continua util pra rodar manualmente / testar local.
+ * O progresso fica na tabela `fipe_import_progresso` (Neon), nao mais em
+ * arquivo local — e a mesma tabela que o cron em
+ * app/api/cron/importa-fipe/route.ts usa pra resumir a importacao sozinho
+ * todo dia. Checkpoint unico: rodar este script manualmente nao reimporta o
+ * que o cron ja fez, e vice-versa. Da pra interromper com Ctrl+C a qualquer
+ * momento — cada marca so conta como concluida depois de gravada por
+ * inteiro.
  */
 import "dotenv/config";
-import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import {
   buscarMarcas,
   criarEstadoCota,
   importarMarca,
+  lerMarcasConcluidas,
+  marcarMarcaConcluida,
   CotaEsgotada,
   type MarcaV1,
 } from "../lib/fipe-import";
-
-const CHECKPOINT = ".fipe-checkpoint.json";
 
 const CONCURRENCY = Number(process.env.FIPE_IMPORT_CONCURRENCY ?? 6);
 const LIMITE_MARCAS = process.env.FIPE_IMPORT_LIMIT
   ? Number(process.env.FIPE_IMPORT_LIMIT)
   : undefined;
-
-function lerCheckpoint(): Set<string> {
-  if (process.env.FIPE_IMPORT_RESET) return new Set();
-  if (!existsSync(CHECKPOINT)) return new Set();
-  try {
-    return new Set(JSON.parse(readFileSync(CHECKPOINT, "utf8")) as string[]);
-  } catch {
-    return new Set();
-  }
-}
-
-function salvarCheckpoint(feitas: Set<string>) {
-  writeFileSync(CHECKPOINT, JSON.stringify([...feitas]), "utf8");
-}
 
 async function main() {
   const url = process.env.DATABASE_URL;
@@ -64,13 +49,15 @@ async function main() {
   const marcasAlvo: MarcaV1[] = LIMITE_MARCAS
     ? marcas.slice(0, LIMITE_MARCAS)
     : marcas;
-  const feitas = lerCheckpoint();
+  const feitas = process.env.FIPE_IMPORT_RESET
+    ? new Set<string>()
+    : await lerMarcasConcluidas(db);
   const pendentes = marcasAlvo.filter((m) => !feitas.has(m.codigo));
 
   console.info(
     `FIPE v1 - ${pendentes.length} marcas pendentes de ${marcasAlvo.length}` +
       ` - concorrencia ${CONCURRENCY}` +
-      (feitas.size ? ` - ${feitas.size} ja concluidas (checkpoint)` : ""),
+      (feitas.size ? ` - ${feitas.size} ja concluidas (fipe_import_progresso)` : ""),
   );
 
   let totalInseridos = 0;
@@ -85,8 +72,7 @@ async function main() {
     totalErros += resultado.erros;
 
     if (resultado.erros === 0) {
-      feitas.add(marca.codigo);
-      salvarCheckpoint(feitas);
+      await marcarMarcaConcluida(db, marca);
       console.info(`ok ${marca.nome} (${resultado.modelos} modelos)`);
     } else {
       console.warn(
@@ -104,10 +90,6 @@ async function main() {
   }
 
   console.info(`\nConcluido: ${totalInseridos} registros, ${totalErros} erros.`);
-  if (totalErros === 0 && existsSync(CHECKPOINT)) {
-    unlinkSync(CHECKPOINT);
-    console.info("Checkpoint removido (importacao completa).");
-  }
 }
 
 main().catch((erro) => {
@@ -118,8 +100,9 @@ main().catch((erro) => {
         `A parallelum v1 respondeu 429 com Retry-After de ${erro.segundos}s ` +
         `(~${Math.ceil(erro.segundos / 3600)}h).\n` +
         `Libera por volta de ${liberaEm.toLocaleString("pt-BR")}.\n\n` +
-        `O checkpoint esta intacto: rodar de novo depois desse horario retoma\n` +
-        `exatamente de onde parou, sem repetir o que ja entrou.\n` +
+        `O progresso ja gravado esta intacto na tabela: rodar de novo depois\n` +
+        `desse horario retoma exatamente de onde parou, sem repetir o que ja\n` +
+        `entrou.\n` +
         `Para gastar menos cota por dia: FIPE_IMPORT_CONCURRENCY=3\n`,
     );
     // exitCode em vez de exit(): com o handle HTTP do neon ainda aberto, o
@@ -132,7 +115,7 @@ main().catch((erro) => {
   if (msg.includes("429")) {
     console.error(
       "\nA API esta limitando as requisicoes (HTTP 429) em rajada.\n" +
-        "Espere alguns minutos e rode de novo — o checkpoint retoma de onde parou.",
+        "Espere alguns minutos e rode de novo — o progresso retoma de onde parou.",
     );
   } else {
     console.error(erro);

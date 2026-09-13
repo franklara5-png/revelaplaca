@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/db";
-import { fipeImportProgresso } from "@/db/schema";
 import {
   buscarMarcas,
   criarEstadoCota,
   importarMarca,
+  lerMarcasConcluidas,
+  marcarMarcaConcluida,
 } from "@/lib/fipe-import";
 
 export const runtime = "nodejs";
@@ -29,10 +30,9 @@ export async function GET(request: Request) {
 
   const [marcas, feitas] = await Promise.all([
     buscarMarcas(cota),
-    db.select({ codigo: fipeImportProgresso.codigoMarca }).from(fipeImportProgresso),
+    lerMarcasConcluidas(db),
   ]);
-  const feitasSet = new Set(feitas.map((f) => f.codigo));
-  const pendentes = marcas.filter((m) => !feitasSet.has(m.codigo));
+  const pendentes = marcas.filter((m) => !feitas.has(m.codigo));
 
   let marcasConcluidas = 0;
   let registrosInseridos = 0;
@@ -53,10 +53,7 @@ export async function GET(request: Request) {
 
     if (resultado.erros === 0) {
       marcasConcluidas++;
-      await db
-        .insert(fipeImportProgresso)
-        .values({ codigoMarca: marca.codigo, nomeMarca: marca.nome })
-        .onConflictDoNothing({ target: fipeImportProgresso.codigoMarca });
+      await marcarMarcaConcluida(db, marca);
     }
 
     if (resultado.cotaEsgotada) {
