@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/recupera-abandono",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/importa-fipe",
+      "schedule": "0 6 * * *"
     }
   ]
 }

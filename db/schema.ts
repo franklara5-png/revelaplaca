@@ -152,6 +152,17 @@ export const fipeModelos = pgTable(
   ],
 );
 
+// Checkpoint do import FIPE (scripts/importa-fipe.ts e o cron de resumo).
+// A API parallelum tem cota diária, entao o import roda aos pedacos ao longo
+// de varios dias — sem isto, cada execucao nao saberia quais marcas ja fez.
+// Substitui o antigo .fipe-checkpoint.json local: o cron do Vercel roda em
+// filesystem efemero, entao o checkpoint precisa sobreviver no banco.
+export const fipeImportProgresso = pgTable("fipe_import_progresso", {
+  codigoMarca: text("codigo_marca").primaryKey(),
+  nomeMarca: text("nome_marca").notNull(),
+  concluidaEm: timestamp("concluida_em", { withTimezone: true }).defaultNow(),
+});
+
 // ─── Hermes (tracking geral de visitas p/ dashboard interno) ──────────────────
 // Cada visita é 1 INSERT, sem upsert; a agregação "1 visitante = 1 linha"
 // acontece só na leitura (GROUP BY ip_hash).

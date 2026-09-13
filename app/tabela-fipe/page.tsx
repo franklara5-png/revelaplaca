@@ -43,7 +43,8 @@ export default async function TabelaFipeIndexPage() {
         ) : (
           <>
             <p className="mt-4 text-sm text-rp-slate-500">
-              {marcas.length} marcas · milhares de páginas de modelos
+              {marcas.length} marcas ·{" "}
+              {marcas.reduce((total, m) => total + m.totalModelos, 0)} modelos
             </p>
             <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {marcas.map((marca) => (
