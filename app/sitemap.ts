@@ -38,7 +38,6 @@ async function montarTodasUrls(): Promise<SitemapItem[]> {
     changeFrequency: "monthly",
   });
   urls.push({ loc: "/tabela-fipe", priority: 0.9, changeFrequency: "weekly" });
-  urls.push({ loc: "/blog", priority: 0.7, changeFrequency: "weekly" });
 
   const marcas = await listarMarcas();
   for (const marca of marcas) {
@@ -76,6 +75,22 @@ async function montarTodasUrls(): Promise<SitemapItem[]> {
 
   // Posts MDX publicados (drafts já filtrados em listarPostsBlog)
   const posts = await listarPostsBlog();
+
+  // O indice do blog muda quando sai post novo, entao o lastmod dele e a data
+  // do post mais recente. Antes caia no fallback `new Date()` e dizia "mudei
+  // agora" a cada revalidacao.
+  const maisRecente = posts
+    .map((p) => new Date(p.updated ?? p.date))
+    .filter((d) => !Number.isNaN(d.getTime()))
+    .sort((a, b) => b.getTime() - a.getTime())[0];
+
+  urls.push({
+    loc: "/blog",
+    lastModified: maisRecente,
+    priority: 0.7,
+    changeFrequency: "weekly",
+  });
+
   for (const post of posts) {
     // lastModified do sitemap segue a revisao, nao a publicacao: e o sinal que
     // diz ao crawler que vale revisitar.
@@ -99,9 +114,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = getSiteUrl();
   const todas = await montarTodasUrls();
 
+  // Sem `?? new Date()`. Esse fallback carimbava a hora do build em toda URL
+  // que nao tinha data propria — e como este sitemap revalida a cada hora, as
+  // paginas estaticas juravam ter mudado a cada revalidacao. O Google trata
+  // lastmod assim como ruido e passa a ignorar o campo no sitemap INTEIRO,
+  // inclusive nos posts, que tem data de verdade. Omitir e honesto: lastmod e
+  // opcional, mentir nao e.
   return todas.map((item) => ({
     url: `${siteUrl}${item.loc}`,
-    lastModified: item.lastModified ?? new Date(),
+    ...(item.lastModified ? { lastModified: item.lastModified } : {}),
     changeFrequency: item.changeFrequency ?? "weekly",
     priority: item.priority ?? 0.5,
   }));
