@@ -2,6 +2,7 @@ import "server-only";
 
 import type { ConsultaPremium, FornecedorPremium } from "./types";
 import { sanitizarDados } from "./sanitize";
+import { buscarNoFornecedor } from "./http";
 
 const TIMEOUT_MS = 15_000;
 
@@ -55,45 +56,19 @@ async function chamarFornecedor(
   placa: string,
   tentativa: number,
 ): Promise<ConsultaPremium | null> {
-  const urlBase = process.env.FORNECEDOR_PREMIUM_URL;
-  const token = process.env.FORNECEDOR_PREMIUM_TOKEN;
+  const bruto = await buscarNoFornecedor(placa, tentativa, {
+    nome: "premium",
+    urlBase: process.env.FORNECEDOR_PREMIUM_URL,
+    token: process.env.FORNECEDOR_PREMIUM_TOKEN,
+    metodo: process.env.FORNECEDOR_PREMIUM_METODO,
+    headerExtraNome: process.env.FORNECEDOR_PREMIUM_HEADER_NOME,
+    headerExtraValor: process.env.FORNECEDOR_PREMIUM_HEADER_VALOR,
+    campoPlaca: process.env.FORNECEDOR_PREMIUM_CAMPO_PLACA,
+    timeoutMs: TIMEOUT_MS,
+  });
 
-  if (!urlBase) {
-    console.error("[fornecedor-premium] FORNECEDOR_PREMIUM_URL não configurada");
-    return null;
-  }
-
-  const url = urlBase.includes("{placa}")
-    ? urlBase.replace("{placa}", placa)
-    : `${urlBase.replace(/\/$/, "")}/${placa}`;
-
-  try {
-    const res = await fetch(url, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(token ? { "X-Api-Key": token } : {}),
-      },
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      console.error(
-        `[fornecedor-premium] HTTP ${res.status} (tentativa ${tentativa})`,
-      );
-      return null;
-    }
-
-    const bruto = sanitizarDados(
-      (await res.json()) as Record<string, unknown>,
-    );
-    return extrairDeResposta(bruto, placa);
-  } catch (erro) {
-    console.error(`[fornecedor-premium] erro (tentativa ${tentativa}):`, erro);
-    return null;
-  }
+  if (!bruto) return null;
+  return extrairDeResposta(bruto, placa);
 }
 
 export const fornecedorPremium: FornecedorPremium = {
