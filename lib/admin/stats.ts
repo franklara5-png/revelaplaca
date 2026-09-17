@@ -262,14 +262,55 @@ export async function obterReceitaPorPeriodo(): Promise<{
   return { porMes, porAno };
 }
 
-export async function contarPagosSemRelatorio(): Promise<number> {
-  const db = getDb();
-  const [row] = await db
+/**
+ * Carência entre marcar o pedido como pago e ele ter o relatório gravado.
+ *
+ * De onde saiu o número (13/09/2026): o fluxo é SÍNCRONO — o mesmo webhook
+ * Asaas que grava `pedidos.status='pago'` chama em seguida
+ * `gerarRelatorioParaPedido`, que consulta o fornecedor premium com retry
+ * (`consultarComBackoff`, 3 tentativas com backoff de 0/2/4s) e cada tentativa
+ * tem timeout de 15s (2 chamadas internas cada). Pior caso medido no código:
+ * ~96s entre `pagoEm` e o INSERT em `relatorios`. 15 minutos dá ~9x de folga
+ * e só conta como pendência o pedido cujo processamento DE FATO falhou/timeout
+ * — nunca um pagamento ainda em andamento.
+ */
+export const CARENCIA_PAGOS_SEM_RELATORIO_MIN = 15;
+
+/**
+ * Query (sem executar) que conta pedidos pagos sem relatorio. Separada da
+ * execucao so para permitir teste de unidade do SQL gerado via `.toSQL()`,
+ * sem tocar no Neon de producao.
+ */
+export function queryPagosSemRelatorio(db: ReturnType<typeof getDb>) {
+  return db
     .select({ total: sql<number>`count(*)::int` })
     .from(pedidos)
     .leftJoin(relatorios, eq(relatorios.pedidoId, pedidos.id))
-    .where(and(eq(pedidos.status, "pago"), sql`${relatorios.id} is null`));
+    .where(
+      and(
+        eq(pedidos.status, "pago"),
+        sql`${relatorios.id} is null`,
+        sql`${pedidos.pagoEm} is not null`,
+        // NÃO escrever `interval '${N} minutes'`: o valor interpolado vira
+        // parâmetro ($2) e o Postgres não substitui parâmetro DENTRO de string
+        // literal — ele lê o dígito do índice. `interval '$2 minutes'` virava
+        // 2 minutos em vez de 15, e mudaria sozinho se a ordem dos parâmetros
+        // mudasse. Multiplicar por `interval '1 minute'` mantém o número como
+        // parâmetro de verdade, fora das aspas.
+        sql`${pedidos.pagoEm} <= now() - (${CARENCIA_PAGOS_SEM_RELATORIO_MIN} * interval '1 minute')`,
+      ),
+    );
+}
 
+/**
+ * Conta pedidos pagos que ainda nao geraram relatorio — o cliente pagou e
+ * ainda nao recebeu o resultado. `db` e injetavel para permitir teste de
+ * unidade sem tocar no Neon de producao; em producao usa `getDb()`.
+ */
+export async function contarPagosSemRelatorio(
+  db: ReturnType<typeof getDb> = getDb(),
+): Promise<number> {
+  const [row] = await queryPagosSemRelatorio(db);
   return row?.total ?? 0;
 }
 

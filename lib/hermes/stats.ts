@@ -3,7 +3,10 @@ import "server-only";
 import { and, desc, gte, isNotNull, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { siteVisits } from "@/db/schema";
-import { obterMetricasDashboard } from "@/lib/admin/stats";
+import {
+  contarPagosSemRelatorio,
+  obterMetricasDashboard,
+} from "@/lib/admin/stats";
 import { E_GENTE } from "@/lib/hermes/gente";
 
 // Início do dia de hoje em America/Sao_Paulo, como timestamptz — calculado no
@@ -28,6 +31,20 @@ export type HermesStats = {
   ipsHoje: number;
   ipsLista: HermesIpEntry[];
   receita: number;
+  pendencias: HermesPendencias;
+};
+
+/**
+ * Pendências que só somem quando um humano age — nada que se resolva sozinho
+ * com o tempo. Consumido pelo dashboard-frank para acender o aviso da aba.
+ *
+ * Campo que não puder ser calculado com segurança é OMITIDO (não vira zero):
+ * campo ausente o dashboard trata como "o site não sabe", zero como "não há".
+ * São coisas diferentes.
+ */
+export type HermesPendencias = {
+  /** Pedido pago cujo relatório ainda não foi gerado (pagou sem receber o resultado). */
+  pagosSemConsulta: number;
 };
 
 /**
@@ -43,7 +60,8 @@ export type HermesStats = {
 export async function getHermesStats(): Promise<HermesStats> {
   const db = getDb();
 
-  const [metricas, onlineRow, hojeRow, ultimaPorIp, viewsPorIp] = await Promise.all([
+  const [metricas, onlineRow, hojeRow, ultimaPorIp, viewsPorIp, pagosSemConsulta] =
+    await Promise.all([
     obterMetricasDashboard("hoje"),
     db
       .select({ total: sql<number>`count(distinct ${siteVisits.ipHash})::int` })
@@ -91,6 +109,7 @@ export async function getHermesStats(): Promise<HermesStats> {
         ),
       )
       .groupBy(siteVisits.ipHash),
+    contarPagosSemRelatorio(),
   ]);
 
   const viewsPorIpMap = new Map(
@@ -120,5 +139,6 @@ export async function getHermesStats(): Promise<HermesStats> {
     ipsHoje: hojeRow?.total ?? 0,
     ipsLista,
     receita: metricas.receitaCentavos / 100,
+    pendencias: { pagosSemConsulta },
   };
 }
