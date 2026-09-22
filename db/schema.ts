@@ -163,6 +163,25 @@ export const fipeImportProgresso = pgTable("fipe_import_progresso", {
   concluidaEm: timestamp("concluida_em", { withTimezone: true }).defaultNow(),
 });
 
+// Checkpoint por MODELO (códigos da API Parallelum v1, não o código FIPE).
+// Sem ele, a marca inteira recomeçava do zero a cada execução: a Audi (150
+// modelos) pede mais que a cota diária da API, nunca terminava, e ficou de
+// 14/09 a 22/09/2026 travando todas as marcas depois dela.
+export const fipeImportModelos = pgTable(
+  "fipe_import_modelos",
+  {
+    codigoMarca: text("codigo_marca").notNull(),
+    codigoModelo: text("codigo_modelo").notNull(),
+    concluidoEm: timestamp("concluido_em", { withTimezone: true }).defaultNow(),
+  },
+  (table) => [
+    primaryKey({
+      name: "fipe_import_modelos_pkey",
+      columns: [table.codigoMarca, table.codigoModelo],
+    }),
+  ],
+);
+
 // ─── Hermes (tracking geral de visitas p/ dashboard interno) ──────────────────
 // Cada visita é 1 INSERT, sem upsert; a agregação "1 visitante = 1 linha"
 // acontece só na leitura (GROUP BY ip_hash).

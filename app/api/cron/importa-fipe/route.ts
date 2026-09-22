@@ -45,6 +45,8 @@ export async function GET(request: Request) {
 
     const resultado = await importarMarca(db, marca, cota, {
       concorrencia: CONCORRENCIA,
+      // Dentro da marca também: uma marca grande sozinha passa do teto.
+      prazo: inicio + ORCAMENTO_MS,
     });
 
     processadas++;

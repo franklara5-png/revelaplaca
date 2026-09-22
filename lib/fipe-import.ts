@@ -9,8 +9,8 @@
  * decide onde guardar esse checkpoint (arquivo local no CLI, tabela no cron).
  */
 import type { NeonHttpDatabase } from "drizzle-orm/neon-http";
-import { sql } from "drizzle-orm";
-import { fipeModelos, fipeImportProgresso } from "@/db/schema";
+import { eq, sql } from "drizzle-orm";
+import { fipeModelos, fipeImportModelos, fipeImportProgresso } from "@/db/schema";
 import { slugify } from "@/lib/slug";
 
 // `any` no generic: script CLI usa `drizzle(neon(url))` sem schema, a rota de
@@ -201,6 +201,8 @@ export async function salvarLote(
 
 export type ResultadoMarca = {
   modelos: number;
+  /** Modelos pulados por já estarem concluídos em execução anterior. */
+  modelosPulados: number;
   inseridos: number;
   erros: number;
   cotaEsgotada: boolean;
@@ -215,13 +217,27 @@ export async function importarMarca(
   db: AnyNeonDb,
   marca: MarcaV1,
   cota: EstadoCota,
-  opts: { concorrencia: number; loteInsert?: number } = { concorrencia: 6 },
+  opts: {
+    concorrencia: number;
+    loteInsert?: number;
+    /**
+     * Instante (Date.now()) a partir do qual não começa modelo novo. O cron
+     * roda com teto de 5 min na Vercel; sem isso uma marca grande estourava o
+     * teto no meio e nada era salvo.
+     */
+    prazo?: number;
+  } = { concorrencia: 6 },
 ): Promise<ResultadoMarca> {
   const loteInsert = opts.loteInsert ?? LOTE_INSERT_PADRAO;
   let buffer: LinhaFipe[] = [];
   let inseridos = 0;
   let erros = 0;
   let cotaEsgotada = false;
+  let modelosPulados = 0;
+  // Conta lotes que falharam ao gravar. Um modelo só é marcado concluído se
+  // nenhum lote falhou desde que ele começou — o buffer é compartilhado entre
+  // modelos em paralelo, então não dá para saber de quem era cada linha.
+  let lotesFalhos = 0;
 
   async function descarregar(forcar = false) {
     if (buffer.length === 0) return;
@@ -233,6 +249,7 @@ export async function importarMarca(
       inseridos += lote.length;
     } catch {
       erros += lote.length;
+      lotesFalhos++;
     }
   }
 
@@ -245,12 +262,35 @@ export async function importarMarca(
     modelos = resposta.modelos ?? [];
   } catch (erro) {
     if (erro instanceof CotaEsgotada) {
-      return { modelos: 0, inseridos: 0, erros: 0, cotaEsgotada: true };
+      return { modelos: 0, modelosPulados: 0, inseridos: 0, erros: 0, cotaEsgotada: true };
     }
-    return { modelos: 0, inseridos: 0, erros: 1, cotaEsgotada: false };
+    return { modelos: 0, modelosPulados: 0, inseridos: 0, erros: 1, cotaEsgotada: false };
   }
 
+  const concluidos = new Set(
+    (
+      await db
+        .select({ codigo: fipeImportModelos.codigoModelo })
+        .from(fipeImportModelos)
+        .where(eq(fipeImportModelos.codigoMarca, marca.codigo))
+    ).map((r) => r.codigo),
+  );
+
   await emParalelo(modelos, opts.concorrencia, async (modelo) => {
+    // Já importado numa execução anterior: não gasta cota com ele de novo.
+    if (concluidos.has(String(modelo.codigo))) {
+      modelosPulados++;
+      return;
+    }
+    // Sem tempo para começar outro modelo: conta como pendente (a marca não
+    // é marcada concluída) e fica para a próxima execução.
+    if (opts.prazo !== undefined && Date.now() > opts.prazo) {
+      erros++;
+      return;
+    }
+    let errosModelo = 0;
+    const lotesFalhosAntes = lotesFalhos;
+
     // Cota ja esgotada por outra tarefa paralela: nao vale a pena tentar de
     // novo, so soma o erro pra esta marca nao ser marcada como concluida.
     if (cota.esgotadaEm !== null) {
@@ -274,6 +314,7 @@ export async function importarMarca(
     await emParalelo(anos, opts.concorrencia, async (ano) => {
       if (cota.esgotadaEm !== null) {
         erros++;
+        errosModelo++;
         cotaEsgotada = true;
         return;
       }
@@ -291,6 +332,7 @@ export async function importarMarca(
 
         if (!Number.isFinite(anoNum)) {
           erros++;
+          errosModelo++;
           return;
         }
 
@@ -314,12 +356,30 @@ export async function importarMarca(
         await descarregar();
       } catch (erro) {
         erros++;
+        errosModelo++;
         if (erro instanceof CotaEsgotada) cotaEsgotada = true;
       }
     });
+
+    // Modelo inteiro sem erro: grava o que estiver no buffer e só então
+    // registra o checkpoint — checkpoint antes das linhas gravadas deixaria
+    // buraco se a função morresse entre os dois.
+    if (errosModelo === 0) {
+      await descarregar(true);
+      if (lotesFalhos === lotesFalhosAntes) {
+        try {
+          await db
+            .insert(fipeImportModelos)
+            .values({ codigoMarca: marca.codigo, codigoModelo: String(modelo.codigo) })
+            .onConflictDoNothing();
+        } catch {
+          // Sem checkpoint o modelo só é refeito na próxima vez; não é perda.
+        }
+      }
+    }
   });
 
   await descarregar(true);
 
-  return { modelos: modelos.length, inseridos, erros, cotaEsgotada };
+  return { modelos: modelos.length, modelosPulados, inseridos, erros, cotaEsgotada };
 }
