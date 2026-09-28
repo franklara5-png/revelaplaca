@@ -104,7 +104,7 @@ export default async function PainelPage() {
 
   const user = session.user;
   const [pedidosList, consultasList] = await Promise.all([
-    getPedidosDoUsuario(user.id, user.email),
+    getPedidosDoUsuario(user.id, user.email, user.emailVerified === true),
     getConsultasDoUsuario(user.id),
   ]);
 

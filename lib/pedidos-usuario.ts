@@ -12,8 +12,22 @@ import { pedidos, relatorios } from "@/db/schema";
  * pelo id; o ramo do e-mail continua para nao perder quem comprou deslogado,
  * antes de existir user_id, ou com a conta ainda nao criada.
  */
-export async function getPedidosDoUsuario(userId: string, email: string) {
+export async function getPedidosDoUsuario(
+  userId: string,
+  email: string,
+  emailVerificado: boolean,
+) {
   const db = getDb();
+
+  // Casar por e-mail so vale quando o endereco foi comprovado. Com cadastro
+  // proprio aberto, alguem poderia se registrar com o e-mail de outra pessoa
+  // e, sem esta trava, ver os laudos pagos dela. O bloqueio principal e o
+  // requireEmailVerification do better-auth; este aqui e independente dele,
+  // para o furo nao voltar se aquela opcao mudar.
+  const filtro = emailVerificado
+    ? or(eq(pedidos.userId, userId), eq(pedidos.email, email))
+    : eq(pedidos.userId, userId);
+
   const rows = await db
     .select({
       id: pedidos.id,
@@ -27,7 +41,7 @@ export async function getPedidosDoUsuario(userId: string, email: string) {
     })
     .from(pedidos)
     .leftJoin(relatorios, eq(pedidos.id, relatorios.pedidoId))
-    .where(or(eq(pedidos.userId, userId), eq(pedidos.email, email)))
+    .where(filtro)
     .orderBy(desc(pedidos.criadoEm))
     .limit(50);
 

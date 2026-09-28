@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { GoogleLoginButton } from "@/components/GoogleLoginButton";
+import { AuthForm } from "@/components/AuthForm";
 import { getSeoMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = getSeoMetadata({
@@ -15,12 +16,20 @@ export default function LoginPage() {
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold text-rp-ink">Entrar no RevelaPlaca</h1>
-          <p className="text-rp-slate-500 text-sm">
-            Use sua conta Google para acessar seus relatórios e histórico
+          <p className="text-rp-slate-400 text-sm">
+            Acesse seus relatórios e seu histórico de consultas
           </p>
         </div>
 
         <GoogleLoginButton />
+
+        <div className="flex items-center gap-3">
+          <span className="h-px flex-1 bg-rp-slate-100" />
+          <span className="text-xs text-rp-slate-400">ou</span>
+          <span className="h-px flex-1 bg-rp-slate-100" />
+        </div>
+
+        <AuthForm />
 
         <p className="text-xs text-center text-rp-slate-400 leading-relaxed">
           Ao entrar, você concorda com os{" "}
