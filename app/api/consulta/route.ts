@@ -14,6 +14,8 @@ import {
   veiculoParaResposta,
 } from "@/lib/veiculos";
 import { registrarEvento } from "@/lib/eventos";
+import { getSessionCookie } from "better-auth/cookies";
+import { getSession } from "@/lib/get-session";
 
 const bodySchema = z.object({
   placa: z.string().min(1),
@@ -81,6 +83,20 @@ export async function POST(request: Request) {
     );
   }
 
+  // Quem esta logado tem a consulta ligada a conta, pra aparecer no painel.
+  // So vai ao banco se houver cookie de sessao: consulta anonima, que e o
+  // caminho comum, nao paga uma ida a mais por causa disso. Falha aqui nao
+  // derruba a consulta — segue anonima, como era antes.
+  let userId: string | null = null;
+  if (getSessionCookie(request)) {
+    try {
+      const session = await getSession();
+      userId = session?.user?.id ?? null;
+    } catch (erro) {
+      console.error("[consulta] sessao ilegivel, seguindo anonimo:", erro);
+    }
+  }
+
   const cache = await buscarVeiculoCache(placa);
 
   if (cache) {
@@ -89,6 +105,7 @@ export async function POST(request: Request) {
       ipHash,
       origem: body.origem,
       cacheHit: true,
+      userId,
     });
 
     void registrarEvento("consulta_gratis", {
@@ -115,6 +132,7 @@ export async function POST(request: Request) {
     ipHash,
     origem: body.origem,
     cacheHit: false,
+    userId,
   });
 
   const fornecedor = await consultarFornecedorBasico(placa);

@@ -15,6 +15,13 @@
       "when": 1790094862140,
       "tag": "0001_fipe_import_modelos",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790616377420,
+      "tag": "0002_yummy_storm",
+      "breakpoints": true
     }
   ]
 }

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { FileText, Clock, CheckCircle, XCircle, ShoppingCart, AlertCircle } from "lucide-react";
+import { FileText, Clock, CheckCircle, XCircle, ShoppingCart, AlertCircle, Search } from "lucide-react";
 import { getSession } from "@/lib/get-session";
 import { getPedidosPorEmail } from "@/lib/pedidos-usuario";
+import { getConsultasDoUsuario } from "@/lib/consultas-usuario";
 import { formatarPlaca } from "@/lib/placa";
 import { getSeoMetadata } from "@/lib/seo";
 import { LogoutButton } from "./LogoutButton";
@@ -45,7 +46,10 @@ export default async function PainelPage() {
   if (!session?.user) redirect("/login?callbackUrl=/painel");
 
   const user = session.user;
-  const pedidosList = await getPedidosPorEmail(user.email);
+  const [pedidosList, consultasList] = await Promise.all([
+    getPedidosPorEmail(user.email),
+    getConsultasDoUsuario(user.id),
+  ]);
 
   return (
     <main className="min-h-[60vh] px-4 py-28">
@@ -71,6 +75,49 @@ export default async function PainelPage() {
           </div>
           <LogoutButton />
         </div>
+
+        {/* Placas consultadas — so aparece para quem ja consultou logado */}
+        {consultasList.length > 0 && (
+          <section>
+            <h2 className="text-lg font-bold text-rp-ink mb-4 flex items-center gap-2">
+              <Search className="w-5 h-5 text-rp-slate-400" />
+              Placas que você consultou
+            </h2>
+
+            <div className="space-y-3">
+              {consultasList.map((consulta) => (
+                <div
+                  key={consulta.placa}
+                  className="flex items-center justify-between bg-white border border-rp-slate-100 rounded-2xl px-5 py-4 hover:border-rp-slate-200 transition-colors"
+                >
+                  <div className="min-w-0">
+                    <p className="font-semibold text-rp-ink">
+                      {formatarPlaca(consulta.placa)}
+                      {consulta.marca ? (
+                        <span className="font-normal text-rp-slate-500">
+                          {" · "}
+                          {consulta.marca} {consulta.modelo}
+                          {consulta.anoModelo ? ` ${consulta.anoModelo}` : ""}
+                        </span>
+                      ) : null}
+                    </p>
+                    <p className="text-xs text-rp-slate-400">
+                      {formatDate(consulta.ultimaEm)}
+                      {consulta.vezes > 1 ? ` · ${consulta.vezes} consultas` : ""}
+                    </p>
+                  </div>
+
+                  <Link
+                    href={`/consulta/${consulta.placa}`}
+                    className="text-sm font-semibold text-rp-primary hover:underline flex-shrink-0 ml-3"
+                  >
+                    Ver de novo
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Histórico de pedidos */}
         <section>

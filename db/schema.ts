@@ -40,9 +40,17 @@ export const consultas = pgTable(
     ipHash: text("ip_hash").notNull(),
     origem: text("origem"),
     cacheHit: boolean("cache_hit").default(false),
+    // Nulo quando a consulta e feita deslogado, que continua sendo o caminho
+    // padrao. Preenchido so para ligar a consulta ao painel de quem ja entrou:
+    // sem isso a consulta gratuita nasce anonima (so ip_hash) e nao ha como
+    // atribuir depois.
+    userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
     criadaEm: timestamp("criada_em", { withTimezone: true }).defaultNow(),
   },
-  (table) => [index("idx_consultas_ip").on(table.ipHash, table.criadaEm)],
+  (table) => [
+    index("idx_consultas_ip").on(table.ipHash, table.criadaEm),
+    index("idx_consultas_user").on(table.userId, table.criadaEm),
+  ],
 );
 
 export const pedidos = pgTable("pedidos", {

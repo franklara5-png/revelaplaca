@@ -29,11 +29,13 @@ export async function registrarConsulta(input: {
   ipHash: string;
   origem?: string | null;
   cacheHit: boolean;
+  userId?: string | null;
 }) {
   await getDb().insert(consultas).values({
     placa: input.placa,
     ipHash: input.ipHash,
     origem: input.origem ?? null,
     cacheHit: input.cacheHit,
+    userId: input.userId ?? null,
   });
 }
