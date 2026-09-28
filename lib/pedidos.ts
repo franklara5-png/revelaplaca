@@ -17,6 +17,7 @@ export async function criarPedido(input: {
   asaasCustomerId: string;
   asaasPaymentId: string;
   valorCentavos?: number;
+  userId?: string | null;
 }): Promise<Pedido> {
   const [pedido] = await getDb()
     .insert(pedidos)
@@ -24,6 +25,7 @@ export async function criarPedido(input: {
       ...(input.id ? { id: input.id } : {}),
       placa: input.placa,
       email: input.email,
+      userId: input.userId ?? null,
       produto: PRODUTO_RELATORIO,
       valorCentavos: input.valorCentavos ?? PRECO_RELATORIO_CENTAVOS,
       asaasCustomerId: input.asaasCustomerId,

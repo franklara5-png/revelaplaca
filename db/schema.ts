@@ -53,21 +53,34 @@ export const consultas = pgTable(
   ],
 );
 
-export const pedidos = pgTable("pedidos", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  placa: text("placa").notNull(),
-  email: text("email").notNull(),
-  produto: text("produto").notNull().default("relatorio_completo"),
-  valorCentavos: integer("valor_centavos").notNull(),
-  asaasCustomerId: text("asaas_customer_id"),
-  asaasPaymentId: text("asaas_payment_id").unique(),
-  status: text("status").notNull().default("pendente"),
-  emailRecuperacaoEnviado: boolean("email_recuperacao_enviado")
-    .notNull()
-    .default(false),
-  criadoEm: timestamp("criado_em", { withTimezone: true }).defaultNow(),
-  pagoEm: timestamp("pago_em", { withTimezone: true }),
-});
+export const pedidos = pgTable(
+  "pedidos",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    placa: text("placa").notNull(),
+    email: text("email").notNull(),
+    // Quem comprou logado fica ligado pelo id. O e-mail sozinho nao serve de
+    // dono: o checkout so pre-preenche o campo e o cliente pode trocar — com
+    // outro endereco, o laudo pago nao aparecia no painel dele.
+    userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
+    produto: text("produto").notNull().default("relatorio_completo"),
+    valorCentavos: integer("valor_centavos").notNull(),
+    asaasCustomerId: text("asaas_customer_id"),
+    asaasPaymentId: text("asaas_payment_id").unique(),
+    status: text("status").notNull().default("pendente"),
+    emailRecuperacaoEnviado: boolean("email_recuperacao_enviado")
+      .notNull()
+      .default(false),
+    criadoEm: timestamp("criado_em", { withTimezone: true }).defaultNow(),
+    pagoEm: timestamp("pago_em", { withTimezone: true }),
+  },
+  (table) => [
+    // O painel busca por dono (user_id) OU por e-mail, para nao perder o
+    // historico de quem comprou deslogado. Os dois caminhos indexados.
+    index("idx_pedidos_user").on(table.userId, table.criadoEm),
+    index("idx_pedidos_email").on(table.email, table.criadoEm),
+  ],
+);
 
 export const adminLoginTentativas = pgTable(
   "admin_login_tentativas",

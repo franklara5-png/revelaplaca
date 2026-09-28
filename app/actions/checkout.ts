@@ -20,6 +20,7 @@ import {
 import { normalizarPlaca, validarPlaca } from "@/lib/placa";
 import { formatarPlaca } from "@/lib/placa";
 import { registrarEvento } from "@/lib/eventos";
+import { getSession } from "@/lib/get-session";
 
 const schema = z.object({
   placa: z.string().min(1),
@@ -46,6 +47,7 @@ async function prepararPagamentoPedido(
   placa: string,
   email: string,
   metodo: MetodoPagamento,
+  userId: string | null,
 ): Promise<CheckoutResult> {
   const cliente = await criarCliente(email);
   const pagamento = await criarPagamento({
@@ -60,6 +62,7 @@ async function prepararPagamentoPedido(
     id: pedidoId,
     placa,
     email,
+    userId,
     asaasCustomerId: cliente.id,
     asaasPaymentId: pagamento.id,
   });
@@ -111,11 +114,16 @@ export async function iniciarCheckout(
 
   try {
     const pedidoId = crypto.randomUUID();
+    // Dono do pedido vem da sessao, nunca do formulario: o e-mail digitado
+    // pode ser outro (e frequentemente e, quando alguem paga pelo e-mail que
+    // usa pra nota). Sem sessao fica nulo e a busca cai no e-mail, como antes.
+    const userId = (await getSession())?.user?.id ?? null;
     return await prepararPagamentoPedido(
       pedidoId,
       placa,
       parsed.data.email,
       parsed.data.metodo,
+      userId,
     );
   } catch (erro) {
     console.error("[checkout]", erro);

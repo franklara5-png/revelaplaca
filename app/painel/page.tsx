@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { FileText, Clock, CheckCircle, XCircle, ShoppingCart, AlertCircle, Search } from "lucide-react";
 import { getSession } from "@/lib/get-session";
-import { getPedidosPorEmail } from "@/lib/pedidos-usuario";
+import { getPedidosDoUsuario } from "@/lib/pedidos-usuario";
 import { getConsultasDoUsuario } from "@/lib/consultas-usuario";
 import { formatarPlaca } from "@/lib/placa";
 import { getSeoMetadata } from "@/lib/seo";
@@ -47,7 +47,7 @@ export default async function PainelPage() {
 
   const user = session.user;
   const [pedidosList, consultasList] = await Promise.all([
-    getPedidosPorEmail(user.email),
+    getPedidosDoUsuario(user.id, user.email),
     getConsultasDoUsuario(user.id),
   ]);
 
