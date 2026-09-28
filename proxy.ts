@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getSessionCookie } from "better-auth/cookies";
 import { COOKIE_NAME, validarSessaoAdmin } from "@/lib/admin/session";
 
 export async function proxy(request: NextRequest) {
@@ -7,7 +8,10 @@ export async function proxy(request: NextRequest) {
 
   // ─── Painel do cliente (Better Auth) — otimista, só cookie ────────────
   if (pathname === "/painel" || pathname.startsWith("/painel/")) {
-    const sessionToken = request.cookies.get("better-auth.session_token")?.value;
+    // Em HTTPS o better-auth grava o cookie como __Secure-better-auth.session_token.
+    // Ler o nome cru so funcionava em localhost: em producao o proxy nunca
+    // achava a sessao e devolvia todo mundo pro /login, em loop.
+    const sessionToken = getSessionCookie(request);
     if (!sessionToken) {
       const login = new URL("/login", request.url);
       login.searchParams.set("callbackUrl", pathname);
