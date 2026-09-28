@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { authClient } from "@/lib/auth-client";
+
 type Props = {
   label?: string;
   className?: string;
@@ -19,10 +21,15 @@ const GOOGLE_LOGO = (
 export function GoogleLoginButton({ label = "Entrar com Google", className = "" }: Props) {
   const [loading, setLoading] = useState(false);
 
-  const handleClick = () => {
+  const handleClick = async () => {
     setLoading(true);
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin;
-    window.location.href = `${baseUrl}/api/auth/sign-in/social?provider=google&callbackURL=${encodeURIComponent(window.location.origin + "/painel")}`;
+    // /api/auth/sign-in/social e POST no better-auth; navegar pra ela por GET
+    // devolvia 404 e o botao nunca chegava no Google.
+    const { error } = await authClient.signIn.social({
+      provider: "google",
+      callbackURL: "/painel",
+    });
+    if (error) setLoading(false);
   };
 
   return (
