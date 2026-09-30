@@ -9,8 +9,12 @@ import { fornecedorPremium } from "@/lib/fornecedores/premium";
 import { sanitizarDados } from "@/lib/fornecedores/sanitize";
 import { buscarPedido } from "@/lib/pedidos";
 import { formatarPlaca } from "@/lib/placa";
-import { getSiteUrl, SITE_NAME } from "@/lib/site-url";
+import { getSiteUrl } from "@/lib/site-url";
 import { registrarEvento } from "@/lib/eventos";
+import {
+  emailRelatorioPronto,
+  emailRelatorioProcessando,
+} from "@/lib/email-templates/pedidos";
 
 const TTL_ACESSO_DIAS = 90;
 const MAX_TENTATIVAS = 3;
@@ -65,31 +69,14 @@ async function enviarEmailRelatorio(
 
   await sendEmail({
     to: email,
-    subject: `Seu relatório veicular — placa ${placaFmt}`,
-    html: `
-      <p>Olá,</p>
-      <p>Seu pagamento foi confirmado. O relatório completo da placa <strong>${placaFmt}</strong> está disponível:</p>
-      <p><a href="${url}">${url}</a></p>
-      <p>O link permanece ativo por ${TTL_ACESSO_DIAS} dias.</p>
-      <p>— ${SITE_NAME}</p>
-    `,
-    text: `Relatório da placa ${placaFmt}: ${url}`,
+    ...emailRelatorioPronto(url, placaFmt, TTL_ACESSO_DIAS),
   });
 }
 
 async function enviarEmailFalhaRelatorio(email: string, placa: string) {
-  const placaFmt = formatarPlaca(placa);
-
   await sendEmail({
     to: email,
-    subject: `Pagamento confirmado — relatório em processamento (${placaFmt})`,
-    html: `
-      <p>Olá,</p>
-      <p>Recebemos seu pagamento referente à placa <strong>${placaFmt}</strong>, mas ainda não conseguimos gerar o relatório completo automaticamente.</p>
-      <p>Nossa equipe foi notificada e você receberá um novo e-mail assim que o relatório estiver pronto. Não é necessário pagar novamente.</p>
-      <p>— ${SITE_NAME}</p>
-    `,
-    text: `Pagamento da placa ${placaFmt} confirmado. Relatório em processamento.`,
+    ...emailRelatorioProcessando(formatarPlaca(placa)),
   });
 }
 
