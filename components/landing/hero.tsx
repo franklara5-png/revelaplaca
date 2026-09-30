@@ -1,11 +1,12 @@
 import { HeroPlaca } from "./hero-placa";
 import { Shield, CheckCircle2 } from "lucide-react";
 import { SITE_DESCRIPTION, SITE_TAGLINE } from "@/lib/site-url";
+import { PRECO_RELATORIO_TEXTO } from "@/lib/constants/pagamento";
 
 const TRUST_POINTS = [
   "Consulta básica gratuita",
   "Histórico do veículo, sem CPF ou nome",
-  "Relatório completo por R$ 24,90",
+  `Relatório completo por ${PRECO_RELATORIO_TEXTO}`,
 ];
 
 export function Hero() {

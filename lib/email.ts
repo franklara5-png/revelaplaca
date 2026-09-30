@@ -12,7 +12,7 @@ export async function sendEmail(mensagem: EmailMensagem): Promise<boolean> {
 
   if (!apiKey) {
     // Em producao, devolver `true` aqui era mentir para quem chamou: o
-    // relatorio PAGO e entregue por e-mail, entao o cliente pagaria R$ 24,90,
+    // relatorio PAGO e entregue por e-mail, entao o cliente pagaria o relatorio,
     // nao receberia nada, e o sistema registraria sucesso. Sem BREVO_API_KEY
     // configurada, a resposta honesta e "nao enviei".
     if (process.env.NODE_ENV === "production") {

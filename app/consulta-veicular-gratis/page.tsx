@@ -3,6 +3,7 @@ import { Shield, Search, FileText, Car, ChevronRight, CheckCircle2, AlertTriangl
 import { Card, Section } from "@/components/ui";
 import { getSeoMetadata } from "@/lib/seo";
 import { SITE_NAME } from "@/lib/site-url";
+import { PRECO_RELATORIO_TEXTO } from "@/lib/constants/pagamento";
 
 export const metadata = getSeoMetadata({
   title: "Consulta veicular grátis pela placa",
@@ -33,7 +34,7 @@ const BENEFICIOS = [
   {
     icon: FileText,
     title: "Relatório completo opcional",
-    text: "Para fechar negócio, invista no relatório pago (R$ 24,90) que revela leilão, sinistro, roubo, gravame, restrições e débitos. Acesso por 90 dias.",
+    text: `Para fechar negócio, invista no relatório pago (${PRECO_RELATORIO_TEXTO}) que revela leilão, sinistro, roubo, gravame, restrições e débitos. Acesso por 90 dias.`,
   },
   {
     icon: AlertTriangle,
@@ -80,7 +81,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Qual a diferença entre a consulta grátis e o relatório completo?",
-    a: "A consulta grátis mostra dados básicos de identificação do veículo e valor FIPE. O relatório completo (R$ 24,90) adiciona verificações detalhadas: histórico de leilão e remarketing, indícios de sinistro, roubo/furto, gravame ativo, restrições judiciais e débitos pendentes.",
+    a: `A consulta grátis mostra dados básicos de identificação do veículo e valor FIPE. O relatório completo (${PRECO_RELATORIO_TEXTO}) adiciona verificações detalhadas: histórico de leilão e remarketing, indícios de sinistro, roubo/furto, gravame ativo, restrições judiciais e débitos pendentes.`,
   },
   {
     q: "Quanto tempo leva para o resultado aparecer?",
@@ -242,7 +243,7 @@ export default function ConsultaVeicularGratisPage() {
                   Relatório completo
                 </h3>
                 <span className="ml-auto rounded-full bg-rp-primary-100 px-2.5 py-0.5 text-xs font-semibold text-rp-primary-700">
-                  R$ 24,90
+                  {PRECO_RELATORIO_TEXTO}
                 </span>
               </div>
               <ul className="space-y-2 text-sm text-rp-slate-600">
@@ -317,7 +318,7 @@ export default function ConsultaVeicularGratisPage() {
             </Link>
           </div>
           <p className="mt-4 text-sm text-rp-primary-200">
-            Relatório completo opcional — R$ 24,90. Acesso por 90 dias.
+            Relatório completo opcional — {PRECO_RELATORIO_TEXTO}. Acesso por 90 dias.
           </p>
         </div>
       </Section>

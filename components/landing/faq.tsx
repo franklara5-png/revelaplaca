@@ -1,11 +1,12 @@
 import { Section } from "@/components/ui";
 import { getSiteUrl, SITE_NAME } from "@/lib/site-url";
+import { PRECO_RELATORIO_TEXTO } from "@/lib/constants/pagamento";
 
 export const FAQ_ITEMS = [
   {
     question: "A consulta básica é realmente grátis?",
     answer:
-      "Sim. Você pode consultar marca, modelo, ano, cor, município e valor FIPE sem pagar nada. O relatório completo com leilão, sinistro e restrições custa R$ 24,90.",
+      `Sim. Você pode consultar marca, modelo, ano, cor, município e valor FIPE sem pagar nada. O relatório completo com leilão, sinistro e restrições custa ${PRECO_RELATORIO_TEXTO}.`,
   },
   {
     question: "Vocês revelam quem é o dono do veículo?",

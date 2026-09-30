@@ -10,6 +10,7 @@ import {
 import { Card, StatusBadge } from "@/components/ui";
 import { CtaRelatorioLink } from "@/components/consulta/cta-relatorio-link";
 import type { ConsultaBasica } from "@/lib/fornecedores/types";
+import { PRECO_RELATORIO_TEXTO } from "@/lib/constants/pagamento";
 
 const VERIFICACOES = [
   { icon: Gavel, label: "Leilão" },
@@ -67,7 +68,7 @@ export function IndiceRisco({ placa, dados }: Props) {
       </ul>
 
       <div className="mt-6 hidden rounded-2xl bg-rp-primary-900 p-4 text-white sm:block">
-        <p className="font-semibold">Relatório completo — R$ 24,90</p>
+        <p className="font-semibold">Relatório completo — {PRECO_RELATORIO_TEXTO}</p>
         <p className="mt-1 text-sm text-rp-primary-100">
           Pagamento via Pix ou cartão. Acesso imediato por link, sem cadastro.
         </p>

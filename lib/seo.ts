@@ -37,7 +37,7 @@ export function getOrganizationJsonLd() {
 /**
  * Produto pago (relatorio completo).
  *
- * O site vende um relatorio de R$ 24,90 e nao declarava nenhum dado
+ * O site vende um relatorio pago e nao declarava nenhum dado
  * estruturado de comercio — o preco so existia no HTML, invisivel para o
  * Google.
  *

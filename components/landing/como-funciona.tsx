@@ -1,4 +1,5 @@
 import { Card, Section } from "@/components/ui";
+import { PRECO_RELATORIO_TEXTO } from "@/lib/constants/pagamento";
 
 const STEPS = [
   {
@@ -14,7 +15,7 @@ const STEPS = [
   {
     num: "3",
     title: "Relatório completo (opcional)",
-    text: "Leilão, sinistro, roubo/furto, gravame e restrições por R$ 24,90 via Pix ou cartão.",
+    text: `Leilão, sinistro, roubo/furto, gravame e restrições por ${PRECO_RELATORIO_TEXTO} via Pix ou cartão.`,
   },
 ];
 

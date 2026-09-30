@@ -1,5 +1,6 @@
 import { Check, X } from "lucide-react";
 import { Card, Section } from "@/components/ui";
+import { PRECO_RELATORIO_TEXTO } from "@/lib/constants/pagamento";
 
 const ROWS = [
   { feature: "Marca, modelo e ano", gratis: true, completo: true },
@@ -36,7 +37,7 @@ export function Comparacao() {
                   Grátis
                 </th>
                 <th className="px-4 py-4 text-center font-semibold text-rp-primary-900">
-                  Completo — R$ 24,90
+                  Completo — {PRECO_RELATORIO_TEXTO}
                 </th>
               </tr>
             </thead>

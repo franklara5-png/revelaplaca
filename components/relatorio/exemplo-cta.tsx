@@ -1,5 +1,6 @@
 import { PlacaSearchForm } from "@/components/landing/placa-search-form";
 import { Card } from "@/components/ui";
+import { PRECO_RELATORIO_TEXTO } from "@/lib/constants/pagamento";
 
 export function ExemploCta() {
   return (
@@ -8,7 +9,7 @@ export function ExemploCta() {
         Revele a placa do seu veículo
       </h2>
       <p className="mt-2 text-sm text-rp-slate-600">
-        Consulta básica grátis — relatório completo por R$ 24,90.
+        Consulta básica grátis — relatório completo por {PRECO_RELATORIO_TEXTO}.
       </p>
       <div className="mt-6 flex justify-center">
         <PlacaSearchForm />

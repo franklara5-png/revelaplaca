@@ -16,6 +16,7 @@ import {
 import { Card, Section } from "@/components/ui";
 import { getSeoMetadata } from "@/lib/seo";
 import { SITE_NAME } from "@/lib/site-url";
+import { PRECO_RELATORIO_TEXTO } from "@/lib/constants/pagamento";
 
 export const metadata = getSeoMetadata({
   title: "Comprar carro usado: checklist 2026",
@@ -38,7 +39,7 @@ const ETAPAS = [
     title: "1. Consulte a placa antes de tudo",
     items: [
       "Faça a consulta gratuita no RevelaPlaca para ver marca, modelo, ano, cor e FIPE",
-      "Invista no relatório completo (R$ 24,90) para verificar leilão, sinistro, roubo e gravame",
+      `Invista no relatório completo (${PRECO_RELATORIO_TEXTO}) para verificar leilão, sinistro, roubo e gravame`,
       "Compare os dados da consulta com o anúncio — divergências são sinal de alerta",
       "Nunca vá ver um carro sem antes consultar a placa",
     ],
@@ -375,7 +376,7 @@ export default function GuiaCompraCarroUsadoPage() {
                   <td className="px-4 py-3 text-rp-slate-700">
                     Relatório completo RevelaPlaca
                   </td>
-                  <td className="px-4 py-3 text-rp-slate-600">R$ 24,90</td>
+                  <td className="px-4 py-3 text-rp-slate-600">{PRECO_RELATORIO_TEXTO}</td>
                 </tr>
                 <tr>
                   <td className="px-4 py-3 text-rp-slate-700">
@@ -459,8 +460,8 @@ export default function GuiaCompraCarroUsadoPage() {
             </Link>
           </div>
           <p className="mt-4 text-sm text-rp-primary-200">
-            Consulta grátis — sem cadastro. Relatório completo opcional por R$
-            24,90.
+            Consulta grátis — sem cadastro. Relatório completo opcional por{" "}
+            {PRECO_RELATORIO_TEXTO}.
           </p>
         </div>
       </Section>

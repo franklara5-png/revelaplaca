@@ -1,4 +1,5 @@
 import { CtaRelatorioLink } from "@/components/consulta/cta-relatorio-link";
+import { PRECO_RELATORIO_TEXTO } from "@/lib/constants/pagamento";
 
 type Props = {
   placa: string;
@@ -12,7 +13,7 @@ export function ConsultaCtaMobile({ placa }: Props) {
         href={`/checkout/${placa}`}
         className="flex h-12 w-full items-center justify-center rounded-full bg-rp-primary-900 text-sm font-semibold text-white shadow-lg"
       >
-        Ver relatório completo — R$ 24,90 no Pix
+        Ver relatório completo — {PRECO_RELATORIO_TEXTO} no Pix
       </CtaRelatorioLink>
     </div>
   );
