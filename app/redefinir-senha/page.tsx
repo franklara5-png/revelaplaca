@@ -16,8 +16,9 @@ export default async function RedefinirSenhaPage({
 }) {
   const { token, error } = await searchParams;
 
+  // Mesmo vao do login: o cabecalho e fixed e py-16 nao o limpa.
   return (
-    <main className="min-h-[60vh] flex items-center justify-center px-4 py-16">
+    <main className="min-h-[70vh] flex items-center justify-center px-4 pt-28 pb-16">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold text-rp-ink">Criar senha nova</h1>

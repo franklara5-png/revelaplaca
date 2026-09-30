@@ -11,8 +11,11 @@ export const metadata: Metadata = getSeoMetadata({
 });
 
 export default function LoginPage() {
+  // pt-28 e o vao do cabecalho, que e fixed: com py-16 o titulo passava por
+  // baixo dele. O padding e respeitado pela centralizacao do flex, entao o
+  // conteudo nunca sobe alem dele.
   return (
-    <main className="min-h-[60vh] flex items-center justify-center px-4 py-16">
+    <main className="min-h-[70vh] flex items-center justify-center px-4 pt-28 pb-16">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold text-rp-ink">Entrar no RevelaPlaca</h1>
