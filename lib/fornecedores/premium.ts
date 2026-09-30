@@ -3,6 +3,7 @@ import "server-only";
 import type { ConsultaPremium, FornecedorPremium } from "./types";
 import { sanitizarDados } from "./sanitize";
 import { buscarNoFornecedor } from "./http";
+import { consultarPremiumConsultarPlaca } from "./consultarplaca";
 
 const TIMEOUT_MS = 15_000;
 
@@ -71,8 +72,23 @@ async function chamarFornecedor(
   return extrairDeResposta(bruto, placa);
 }
 
+// Qual adaptador usar. Variavel INTERNA, nunca exibida.
+//
+// Nao confundir com FORNECEDOR_PREMIUM_NOME: aquela vai para a TELA do
+// cliente ("Nada consta — verificado em <nome>", em
+// components/relatorio/secao-relatorio.tsx) e nao deve conter o nome do
+// fornecedor. Sem ela, o relatorio mostra "Parceiro veicular autorizado".
+//
+//   (vazio)         -> adaptador generico: uma URL que devolve tudo
+//   consultarplaca  -> um endpoint por item, cobrado por item
+const TIPO = process.env.FORNECEDOR_PREMIUM_TIPO?.trim().toLowerCase();
+
 export const fornecedorPremium: FornecedorPremium = {
   async consultar(placa: string) {
+    if (TIPO === "consultarplaca") {
+      return consultarPremiumConsultarPlaca(placa);
+    }
+
     const primeira = await chamarFornecedor(placa, 1);
     if (primeira) return primeira;
     return chamarFornecedor(placa, 2);

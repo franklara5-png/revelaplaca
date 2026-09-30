@@ -1,0 +1,1 @@
+ALTER TABLE "pedidos" ADD COLUMN "email_falha_relatorio_enviado" boolean DEFAULT false NOT NULL;

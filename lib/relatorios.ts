@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, isNull, lt, ne, or } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { getDb } from "@/db";
 import { pedidos, relatorios } from "@/db/schema";
@@ -17,8 +17,10 @@ import {
 } from "@/lib/email-templates/pedidos";
 
 const TTL_ACESSO_DIAS = 90;
-const MAX_TENTATIVAS = 3;
-const BACKOFF_MS = [0, 2_000, 4_000];
+// Nao ha mais retentativa do relatorio INTEIRO aqui. Ela repetia todas as
+// secoes 3 vezes, e com fornecedor que cobra por item isso pagava de novo o
+// que ja tinha vindo. Quem tenta de novo agora e o adaptador, e so o item
+// que falhou (lib/fornecedores/premium.ts).
 
 export type Relatorio = typeof relatorios.$inferSelect;
 
@@ -80,19 +82,65 @@ async function enviarEmailFalhaRelatorio(email: string, placa: string) {
   });
 }
 
-async function consultarComBackoff(placa: string) {
-  for (let i = 0; i < MAX_TENTATIVAS; i++) {
-    if (BACKOFF_MS[i] > 0) {
-      await new Promise((r) => setTimeout(r, BACKOFF_MS[i]));
-    }
+// Janela da trava de geracao. Maior que o tempo maximo de uma funcao (300s),
+// para uma geracao viva nunca ser atropelada; e e tambem o intervalo minimo
+// entre retentativas automaticas depois de uma falha.
+const JANELA_TRAVA_MS = 10 * 60 * 1000;
 
-    const resultado = await fornecedorPremium.consultar(placa);
-    if (resultado) return resultado;
-  }
+/**
+ * Tenta ficar com a vez de gerar o relatorio deste pedido. So um chamador
+ * ganha: o UPDATE e condicional, entao duas chamadas simultaneas nao passam as
+ * duas. Uma trava mais velha que a janela e considerada abandonada (funcao
+ * que morreu no meio) e pode ser retomada.
+ */
+async function pegarTravaGeracao(pedidoId: string): Promise<boolean> {
+  const limite = new Date(Date.now() - JANELA_TRAVA_MS);
+  const pegos = await getDb()
+    .update(pedidos)
+    .set({ relatorioGerandoEm: new Date() })
+    .where(
+      and(
+        eq(pedidos.id, pedidoId),
+        or(
+          isNull(pedidos.relatorioGerandoEm),
+          lt(pedidos.relatorioGerandoEm, limite),
+        ),
+      ),
+    )
+    .returning({ id: pedidos.id });
 
-  return null;
+  return pegos.length > 0;
 }
 
+async function soltarTravaGeracao(pedidoId: string) {
+  await getDb()
+    .update(pedidos)
+    .set({ relatorioGerandoEm: null })
+    .where(eq(pedidos.id, pedidoId));
+}
+
+/** Marca o aviso de falha como enviado; devolve true so para quem marcou. */
+async function marcarEmailFalhaEnviado(pedidoId: string): Promise<boolean> {
+  const marcados = await getDb()
+    .update(pedidos)
+    .set({ emailFalhaRelatorioEnviado: true })
+    .where(
+      and(eq(pedidos.id, pedidoId), eq(pedidos.emailFalhaRelatorioEnviado, false)),
+    )
+    .returning({ id: pedidos.id });
+
+  return marcados.length > 0;
+}
+
+/**
+ * Gera o relatorio pago de um pedido. Devolve o token, ou null quando ainda
+ * nao ha relatorio — seja porque outra chamada esta gerando agora, seja
+ * porque o fornecedor falhou.
+ *
+ * Chamada pelo webhook do Asaas, pela pagina de checkout (que pergunta o
+ * status a cada poucos segundos) e pelo admin. Por isso a trava: a consulta
+ * ao fornecedor e PAGA e pode levar minutos.
+ */
 export async function gerarRelatorioParaPedido(
   pedidoId: string,
 ): Promise<{ token: string } | null> {
@@ -102,11 +150,37 @@ export async function gerarRelatorioParaPedido(
   const pedido = await buscarPedido(pedidoId);
   if (!pedido || pedido.status !== "pago") return null;
 
-  const dadosPremium = await consultarComBackoff(pedido.placa);
-  if (!dadosPremium) {
-    await enviarEmailFalhaRelatorio(pedido.email, pedido.placa);
-    return null;
+  if (!(await pegarTravaGeracao(pedidoId))) return null;
+
+  // Sucesso solta a trava; falha a MANTEM, para a proxima tentativa
+  // automatica so acontecer depois da janela — e nao a cada pergunta da
+  // pagina de checkout, pagando o fornecedor de novo a cada uma.
+  let soltarAoFim = true;
+
+  try {
+    // Outra geracao pode ter terminado entre a primeira checagem e a trava.
+    const jaGerado = await buscarRelatorioPorPedido(pedidoId);
+    if (jaGerado) return { token: jaGerado.tokenAcesso };
+
+    const dadosPremium = await fornecedorPremium.consultar(pedido.placa);
+    if (!dadosPremium) {
+      soltarAoFim = false;
+      if (await marcarEmailFalhaEnviado(pedidoId)) {
+        await enviarEmailFalhaRelatorio(pedido.email, pedido.placa);
+      }
+      return null;
+    }
+
+    return await gravarRelatorio(pedido, dadosPremium);
+  } finally {
+    if (soltarAoFim) await soltarTravaGeracao(pedidoId);
   }
+}
+
+async function gravarRelatorio(
+  pedido: NonNullable<Awaited<ReturnType<typeof buscarPedido>>>,
+  dadosPremium: NonNullable<Awaited<ReturnType<typeof fornecedorPremium.consultar>>>,
+): Promise<{ token: string }> {
 
   const token = nanoid(32);
   const expiraEm = calcularExpiracaoAcesso();
@@ -137,23 +211,24 @@ export async function gerarRelatorioParaPedido(
   return { token: relatorio.tokenAcesso };
 }
 
-export async function processarPagamentoConfirmado(
-  pedidoId: string,
-): Promise<{ token: string | null; jaPago: boolean }> {
+/**
+ * Marca o pedido como pago e devolve se ESTA chamada marcou.
+ *
+ * A transicao para "pago" precisa ser ATOMICA. A Asaas reenvia webhook por
+ * desenho; lendo o status e depois gravando, duas entregas simultaneas
+ * passavam as duas pela checagem e contavam o pagamento duas vezes. O UPDATE
+ * condicional resolve no banco: so uma entrega encontra o pedido ainda
+ * nao-pago.
+ *
+ * Nao gera o relatorio. Gerar pode levar minutos (o leilao processa fotos), e
+ * o webhook precisa responder ao Asaas na hora — quem chama agenda a geracao
+ * para depois da resposta. Reenvio do webhook nao duplica a consulta paga: a
+ * trava em gerarRelatorioParaPedido garante uma geracao por pedido.
+ */
+export async function marcarPedidoComoPago(pedidoId: string): Promise<boolean> {
   const pedido = await buscarPedido(pedidoId);
-  if (!pedido) return { token: null, jaPago: false };
+  if (!pedido) return false;
 
-  // A transicao para "pago" precisa ser ATOMICA.
-  //
-  // A Asaas reenvia webhook por desenho. Com a versao anterior — ler o status,
-  // depois gravar — duas entregas simultaneas passavam as duas pela checagem,
-  // gravavam as duas e chamavam gerarRelatorioParaPedido as duas vezes. E ali
-  // dentro esta `consultarComBackoff`, que e a chamada PAGA ao fornecedor
-  // premium. O resultado seria: dois relatorios para o mesmo pedido, dois
-  // e-mails para o cliente e a consulta paga DUAS vezes por uma venda so.
-  //
-  // O UPDATE condicional resolve no banco: so uma das entregas encontra o
-  // pedido ainda nao-pago, e so ela gera. As demais caem no ramo de leitura.
   const marcados = await getDb()
     .update(pedidos)
     .set({ status: "pago", pagoEm: new Date() })
@@ -161,24 +236,10 @@ export async function processarPagamentoConfirmado(
     .returning({ id: pedidos.id });
 
   const euMarquei = marcados.length > 0;
-
-  if (!euMarquei) {
-    // Ja estava pago (ou outra entrega ganhou a corrida agora).
-    const relatorio = await buscarRelatorioPorPedido(pedidoId);
-    if (relatorio) {
-      return { token: relatorio.tokenAcesso, jaPago: true };
-    }
-    // Pago sem relatorio: pode ser a corrida ainda em curso na outra entrega,
-    // ou uma geracao que falhou antes. gerarRelatorioParaPedido tem a propria
-    // checagem de existente, entao e seguro chamar.
-    const gerado = await gerarRelatorioParaPedido(pedidoId);
-    return { token: gerado?.token ?? null, jaPago: true };
+  if (euMarquei) {
+    void registrarEvento("pagamento_confirmado", { placa: pedido.placa });
   }
-
-  void registrarEvento("pagamento_confirmado", { placa: pedido.placa });
-
-  const gerado = await gerarRelatorioParaPedido(pedidoId);
-  return { token: gerado?.token ?? null, jaPago: false };
+  return euMarquei;
 }
 
 export function relatorioValido(relatorio: Relatorio): boolean {

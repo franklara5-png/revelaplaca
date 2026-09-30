@@ -1,0 +1,1 @@
+ALTER TABLE "pedidos" ADD COLUMN "relatorio_gerando_em" timestamp with time zone;

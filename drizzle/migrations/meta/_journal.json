@@ -29,6 +29,20 @@
       "when": 1790618845202,
       "tag": "0003_amazing_matthew_murdock",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790807093755,
+      "tag": "0004_equal_rick_jones",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790807131516,
+      "tag": "0005_gray_sage",
+      "breakpoints": true
     }
   ]
 }

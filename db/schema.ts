@@ -73,6 +73,18 @@ export const pedidos = pgTable(
       .default(false),
     criadoEm: timestamp("criado_em", { withTimezone: true }).defaultNow(),
     pagoEm: timestamp("pago_em", { withTimezone: true }),
+    // Trava da geracao do relatorio. A geracao chama o fornecedor PAGO e pode
+    // levar minutos (o leilao processa imagem). Sem trava, o webhook do Asaas
+    // reenviado e a pagina de checkout — que pergunta o status a cada poucos
+    // segundos — disparavam geracoes em paralelo, cada uma pagando de novo.
+    // Quem consegue gravar este campo gera; os outros esperam o resultado.
+    relatorioGerandoEm: timestamp("relatorio_gerando_em", { withTimezone: true }),
+    // O e-mail de "pagamento recebido, relatorio em processamento" vai UMA vez
+    // por pedido. Sem isto, cada nova tentativa de geracao que falhasse
+    // mandava outro — o cliente receberia o mesmo aviso em serie.
+    emailFalhaRelatorioEnviado: boolean("email_falha_relatorio_enviado")
+      .notNull()
+      .default(false),
   },
   (table) => [
     // O painel busca por dono (user_id) OU por e-mail, para nao perder o
