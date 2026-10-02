@@ -27,6 +27,7 @@ import {
   importarMarca,
   lerMarcasConcluidas,
   marcarMarcaConcluida,
+  ordenarPorProcura,
   CotaEsgotada,
   type MarcaV1,
 } from "../lib/fipe-import";
@@ -52,7 +53,9 @@ async function main() {
   const feitas = process.env.FIPE_IMPORT_RESET
     ? new Set<string>()
     : await lerMarcasConcluidas(db);
-  const pendentes = marcasAlvo.filter((m) => !feitas.has(m.codigo));
+  const pendentes = ordenarPorProcura(
+    marcasAlvo.filter((m) => !feitas.has(m.codigo)),
+  );
 
   console.info(
     `FIPE v1 - ${pendentes.length} marcas pendentes de ${marcasAlvo.length}` +

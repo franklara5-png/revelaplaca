@@ -6,6 +6,7 @@ import {
   importarMarca,
   lerMarcasConcluidas,
   marcarMarcaConcluida,
+  ordenarPorProcura,
 } from "@/lib/fipe-import";
 
 export const runtime = "nodejs";
@@ -32,7 +33,9 @@ export async function GET(request: Request) {
     buscarMarcas(cota),
     lerMarcasConcluidas(db),
   ]);
-  const pendentes = marcas.filter((m) => !feitas.has(m.codigo));
+  const pendentes = ordenarPorProcura(
+    marcas.filter((m) => !feitas.has(m.codigo)),
+  );
 
   let marcasConcluidas = 0;
   let registrosInseridos = 0;

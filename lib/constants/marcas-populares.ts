@@ -1,0 +1,25 @@
+// Marcas na ordem de procura no Brasil, por slug (o mesmo de /tabela-fipe/[marca]).
+// Usada pela home (seção "Preço FIPE por marca") e pela importação da FIPE,
+// que puxa estas primeiro: a API tem cota diária e ia em ordem alfabética,
+// deixando VW, Chevrolet e Toyota para o fim.
+export const MARCAS_POPULARES = [
+  "fiat",
+  "vw-volkswagen",
+  "gm-chevrolet",
+  "toyota",
+  "hyundai",
+  "honda",
+  "jeep",
+  "renault",
+  "ford",
+  "nissan",
+  "byd",
+  "peugeot",
+  "citroen",
+  "caoa-chery-chery",
+  "mitsubishi",
+  "bmw",
+  "audi",
+  "mercedes-benz",
+  "kia-motors",
+] as const;

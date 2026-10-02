@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Section } from "@/components/ui";
+import { MARCAS_POPULARES } from "@/lib/constants/marcas-populares";
 import { listarMarcas } from "@/lib/fipe";
 
 // A home tinha 12 links internos, nenhum para o blog nem para a tabela FIPE.
@@ -38,28 +39,6 @@ const GUIAS = [
   },
 ];
 
-// Ordem de procura no Brasil. Só aparece a que já está importada no banco; as
-// que faltarem entram sozinhas quando a importação chegar nelas.
-const MARCAS_POPULARES = [
-  "fiat",
-  "vw-volkswagen",
-  "gm-chevrolet",
-  "toyota",
-  "hyundai",
-  "honda",
-  "jeep",
-  "renault",
-  "ford",
-  "nissan",
-  "byd",
-  "peugeot",
-  "citroen",
-  "caoa-chery-chery",
-  "mitsubishi",
-  "bmw",
-  "audi",
-  "mercedes-benz",
-];
 const MARCAS_NA_HOME = 12;
 
 export function GuiasHome() {

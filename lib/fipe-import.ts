@@ -12,6 +12,7 @@ import type { NeonHttpDatabase } from "drizzle-orm/neon-http";
 import { eq, sql } from "drizzle-orm";
 import { fipeModelos, fipeImportModelos, fipeImportProgresso } from "@/db/schema";
 import { slugify } from "@/lib/slug";
+import { MARCAS_POPULARES } from "@/lib/constants/marcas-populares";
 
 // `any` no generic: script CLI usa `drizzle(neon(url))` sem schema, a rota de
 // cron usa `getDb()` com schema tipado — os dois precisam caber aqui.
@@ -151,6 +152,20 @@ export async function emParalelo<T>(
 
 export function buscarMarcas(cota: EstadoCota) {
   return fetchJson<MarcaV1[]>(`${API_BASE}/marcas`, cota);
+}
+
+/**
+ * Fila de importação: marcas populares primeiro, na ordem de MARCAS_POPULARES;
+ * o resto mantém a ordem da API. Com ~170 preços por dia de cota, a ordem
+ * alfabética levava semanas para chegar em VW, Chevrolet e Toyota.
+ */
+export function ordenarPorProcura<T extends { nome: string }>(marcas: T[]): T[] {
+  const lista: readonly string[] = MARCAS_POPULARES;
+  const posicao = (m: T) => {
+    const i = lista.indexOf(slugify(m.nome));
+    return i === -1 ? lista.length : i;
+  };
+  return [...marcas].sort((a, b) => posicao(a) - posicao(b));
 }
 
 /**
