@@ -31,8 +31,58 @@ function baseUrl(): string {
   return process.env.ASAAS_ENV === "production" ? PRODUCTION_URL : SANDBOX_URL;
 }
 
+/**
+ * Chave do Asaas, com o "$" do comeco garantido.
+ *
+ * Toda chave do Asaas comeca com "$aact_". O Next.js trata "$nome" em variavel
+ * de ambiente como referencia a OUTRA variavel e a expande — "$aact_prod_..."
+ * vira texto vazio, sem erro nenhum. Em 02/10 isso deixou o checkout fechado
+ * com a chave gravada na Vercel, e escapar com "\$" tambem nao resolveu.
+ *
+ * Por isso a chave fica gravada SEM o "$" inicial e ele e devolvido aqui. Se
+ * vier com o "$" (como em .env local), passa igual. Funciona seja qual for a
+ * regra de expansao da plataforma.
+ */
+export function chaveAsaas(): string {
+  const bruta = (process.env.ASAAS_API_KEY ?? "").trim().replace(/^\\/, "");
+  if (!bruta) return "";
+  return bruta.startsWith("$") ? bruta : `$${bruta}`;
+}
+
+/**
+ * Interruptor das vendas. Exige a chave do Asaas E `VENDAS_ATIVAS=true`.
+ *
+ * Antes bastava a chave existir. O problema: variavel nova na Vercel so vale
+ * no proximo deploy, entao gravar a chave "para depois" deixava as vendas
+ * prontas para ligar sozinhas no proximo deploy qualquer — inclusive um de
+ * correcao sem relacao nenhuma. E vender sem credito nos fornecedores e o
+ * cliente pagar e receber "relatorio em processamento".
+ *
+ * Ligar: `VENDAS_ATIVAS=true` na Vercel e deploy. Desligar (credito acabou,
+ * fornecedor fora do ar): apagar a variavel e deploy — o resto do site segue.
+ */
+export function vendasAtivas(): boolean {
+  // Mesma leitura que o cliente do Asaas usa (lib/asaas.ts), com o "$" do
+  // comeco garantido — senao o interruptor e a cobranca discordariam.
+  const chave = chaveAsaas();
+  const interruptor = process.env.VENDAS_ATIVAS;
+  const ativas = chave.length > 0 && interruptor === "true";
+
+  if (!ativas) {
+    // Diz POR QUE o checkout recusou — sem isso, "pagamentos indisponiveis"
+    // nao distingue chave ausente de interruptor desligado. So presenca e
+    // tamanho; o valor da chave nunca vai para o log.
+    console.warn("[vendas] checkout fechado", {
+      chaveAsaas: chave.length > 0 ? `presente (${chave.length} chars)` : "AUSENTE",
+      interruptor: interruptor === undefined ? "AUSENTE" : JSON.stringify(interruptor),
+    });
+  }
+
+  return ativas;
+}
+
 function apiKey(): string {
-  const key = process.env.ASAAS_API_KEY;
+  const key = chaveAsaas();
   if (!key) throw new Error("ASAAS_API_KEY não configurada");
   return key;
 }

@@ -7,11 +7,11 @@ import {
   buscarPixQrCode,
   buscarPagamento,
   pagamentoExpirado,
+  vendasAtivas,
 } from "@/lib/asaas";
 import {
   PRECO_RELATORIO_REAIS,
   type MetodoPagamento,
-  vendasAtivas,
 } from "@/lib/constants/pagamento";
 import {
   atualizarPaymentId,
