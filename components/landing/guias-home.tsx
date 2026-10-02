@@ -100,12 +100,14 @@ export async function MarcasFipeHome() {
             <li key={m.slugMarca}>
               <Link
                 href={`/tabela-fipe/${m.slugMarca}`}
-                className="rp-card flex h-full items-center justify-between gap-2 p-4"
+                className="rp-card block h-full p-4"
               >
-                <span className="font-semibold text-rp-slate-900">
+                {/* Nome em cima e contagem embaixo: lado a lado, "Caoa
+                    Chery/Chery" + "33 modelos" estourava a tela de 375px. */}
+                <span className="block break-words font-semibold text-rp-slate-900">
                   {m.marca}
                 </span>
-                <span className="shrink-0 text-xs text-rp-slate-500">
+                <span className="mt-1 block text-xs text-rp-slate-500">
                   {m.totalModelos} {m.totalModelos === 1 ? "modelo" : "modelos"}
                 </span>
               </Link>
