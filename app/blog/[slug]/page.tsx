@@ -155,6 +155,19 @@ export default async function BlogPostPage({
             </Card>
 
             <Card>
+              <h2 className="font-bold text-rp-slate-900">Quanto vale o carro?</h2>
+              <p className="mt-2 text-sm text-rp-slate-600">
+                Preço da tabela FIPE por marca, modelo, ano e combustível.
+              </p>
+              <Link
+                href="/tabela-fipe"
+                className="mt-3 inline-block text-sm font-semibold text-rp-primary-700 hover:underline"
+              >
+                Consultar a tabela FIPE
+              </Link>
+            </Card>
+
+            <Card>
               <h2 className="font-bold text-rp-slate-900">Posts relacionados</h2>
               <div className="mt-4">
                 <RelatedPosts posts={related} />

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FipeBreadcrumb } from "@/components/fipe";
+import { FipeBreadcrumb, FipeGuiasCompra } from "@/components/fipe";
 import { getSeoMetadata } from "@/lib/seo";
 import {
   buscarMarca,
@@ -12,6 +12,14 @@ import {
 import { SITE_NAME } from "@/lib/site-url";
 
 export const revalidate = 86_400;
+
+// Sem isto a rota dinâmica renderizava a cada visita (no-store, sem cache na
+// Vercel), mesmo com revalidate: cada acesso do Google ia ao banco. Lista vazia
+// = nada é gerado no build; cada página é gerada na primeira visita e fica em
+// cache por um dia.
+export async function generateStaticParams() {
+  return [];
+}
 
 type Props = {
   params: Promise<{ marca: string }>;
@@ -156,6 +164,8 @@ export default async function TabelaFipeMarcaPage({ params }: Props) {
             </li>
           ))}
         </ul>
+
+        <FipeGuiasCompra veiculo={marca.marca} />
       </div>
     </div>
   );

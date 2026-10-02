@@ -6,6 +6,7 @@ import {
   Faq,
   FaqJsonLd,
 } from "@/components/landing";
+import { GuiasHome, MarcasFipeHome } from "@/components/landing/guias-home";
 import { PlacaSearchForm } from "@/components/landing/placa-search-form";
 import { Section } from "@/components/ui";
 import {
@@ -22,6 +23,9 @@ export const metadata = getSeoMetadata({
   path: "/",
   keywords: ["revelar placa", "consulta placa", "leilão carro", "histórico veicular"],
 });
+
+// A seção de marcas lê o banco; regenera uma vez por dia, como a tabela FIPE.
+export const revalidate = 86_400;
 
 export default function HomePage() {
   return (
@@ -50,6 +54,8 @@ export default function HomePage() {
       <RelatorioPreview />
       <Comparacao />
       <Faq />
+      <GuiasHome />
+      <MarcasFipeHome />
       <Section variant="primary" className="text-center">
         <div className="mx-auto max-w-2xl">
           <h2 className="text-2xl font-bold md:text-3xl">
