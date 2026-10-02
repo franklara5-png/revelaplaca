@@ -24,6 +24,11 @@ export type ConfigFornecedor = {
   headerExtraValor: string | undefined;
   /** Nome do campo da placa no corpo do POST. Padrao: "placa". */
   campoPlaca: string | undefined;
+  /**
+   * Campos fixos a mais no corpo do POST, como JSON. A APIBrasil, por
+   * exemplo, escolhe o produto pelo corpo: {"tipo":"agregados-propria"}.
+   */
+  corpoExtra?: string | undefined;
   timeoutMs: number;
 };
 
@@ -35,6 +40,25 @@ function normalizarMetodo(valor: string | undefined, nome: string): "GET" | "POS
     `[fornecedor-${nome}] metodo "${valor}" invalido. Use GET ou POST. Usando GET.`,
   );
   return "GET";
+}
+
+function lerCorpoExtra(
+  bruto: string | undefined,
+  nome: string,
+): Record<string, unknown> {
+  if (!bruto?.trim()) return {};
+  try {
+    const valor = JSON.parse(bruto);
+    if (valor && typeof valor === "object" && !Array.isArray(valor)) {
+      return valor as Record<string, unknown>;
+    }
+  } catch {
+    // cai no aviso abaixo
+  }
+  console.error(
+    `[fornecedor-${nome}] FORNECEDOR_${nome.toUpperCase()}_CORPO_EXTRA nao e um objeto JSON valido; ignorado`,
+  );
+  return {};
 }
 
 /**
@@ -83,7 +107,10 @@ export async function buscarNoFornecedor(
   let body: string | undefined;
   if (metodo === "POST") {
     headers["Content-Type"] = "application/json";
-    body = JSON.stringify({ [config.campoPlaca?.trim() || "placa"]: placa });
+    body = JSON.stringify({
+      ...lerCorpoExtra(config.corpoExtra, nome),
+      [config.campoPlaca?.trim() || "placa"]: placa,
+    });
   }
 
   try {
@@ -102,7 +129,19 @@ export async function buscarNoFornecedor(
       return null;
     }
 
-    return sanitizarDados((await res.json()) as Record<string, unknown>);
+    const json = (await res.json()) as Record<string, unknown>;
+
+    // Ha fornecedor que responde 200 com o erro no corpo (a APIBrasil manda
+    // "error": true quando o saldo acaba). Tratar isso como sucesso gravaria
+    // um veiculo em branco no cache.
+    if (json.error === true) {
+      console.error(
+        `[fornecedor-${nome}] erro no corpo (tentativa ${tentativa}): ${String(json.message ?? "sem mensagem")}`,
+      );
+      return null;
+    }
+
+    return sanitizarDados(json);
   } catch (erro) {
     console.error(`[fornecedor-${nome}] erro (tentativa ${tentativa}):`, erro);
     return null;
