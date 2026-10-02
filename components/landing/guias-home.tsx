@@ -9,7 +9,7 @@ import { listarMarcas } from "@/lib/fipe";
 const GUIAS = [
   {
     href: "/blog/como-saber-se-carro-foi-leilao",
-    titulo: "Como saber se o carro foi de leilão",
+    titulo: "Como saber se o carro é de leilão",
     resumo: "Os sinais que entregam um carro de leilão e por que ele vale menos.",
   },
   {

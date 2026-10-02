@@ -13,7 +13,7 @@ export function FipeGuiasCompra({ veiculo }: Props) {
   const guias = [
     {
       href: "/blog/como-saber-se-carro-foi-leilao",
-      titulo: `Como saber se o ${veiculo} foi de leilão`,
+      titulo: `Como saber se o ${veiculo} é de leilão`,
       resumo: "Os sinais no documento e no histórico que entregam um carro de leilão.",
     },
     {
