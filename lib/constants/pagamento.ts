@@ -31,7 +31,21 @@ export const PRODUTO_RELATORIO = "relatorio_completo";
  * fornecedor fora do ar): apagar a variavel e deploy — o resto do site segue.
  */
 export function vendasAtivas(): boolean {
-  return Boolean(process.env.ASAAS_API_KEY) && process.env.VENDAS_ATIVAS === "true";
+  const chave = process.env.ASAAS_API_KEY ?? "";
+  const interruptor = process.env.VENDAS_ATIVAS;
+  const ativas = chave.length > 0 && interruptor === "true";
+
+  if (!ativas) {
+    // Diz POR QUE o checkout recusou — sem isso, "pagamentos indisponiveis"
+    // nao distingue chave ausente de interruptor desligado. So presenca e
+    // tamanho; o valor da chave nunca vai para o log.
+    console.warn("[vendas] checkout fechado", {
+      chaveAsaas: chave.length > 0 ? `presente (${chave.length} chars)` : "AUSENTE",
+      interruptor: interruptor === undefined ? "AUSENTE" : JSON.stringify(interruptor),
+    });
+  }
+
+  return ativas;
 }
 
 export type StatusPedido =
