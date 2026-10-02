@@ -11,6 +11,7 @@ import {
 import {
   PRECO_RELATORIO_REAIS,
   type MetodoPagamento,
+  vendasAtivas,
 } from "@/lib/constants/pagamento";
 import {
   atualizarPaymentId,
@@ -108,7 +109,7 @@ export async function iniciarCheckout(
     return { ok: false, erro: "Placa inválida." };
   }
 
-  if (!process.env.ASAAS_API_KEY) {
+  if (!vendasAtivas()) {
     return { ok: false, erro: "Pagamentos temporariamente indisponíveis." };
   }
 
@@ -143,7 +144,7 @@ export async function retomarCheckout(input: {
     return { ok: false, erro: "Pedido indisponível para retomada." };
   }
 
-  if (!process.env.ASAAS_API_KEY) {
+  if (!vendasAtivas()) {
     return { ok: false, erro: "Pagamentos temporariamente indisponíveis." };
   }
 
