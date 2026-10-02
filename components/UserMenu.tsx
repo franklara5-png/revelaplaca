@@ -44,6 +44,8 @@ export function UserMenu() {
         aria-label="Menu do usuário"
       >
         {user.image ? (
+          // Avatar do Google, 32px: mesmo motivo do painel para não usar next/image.
+          // eslint-disable-next-line @next/next/no-img-element
           <img src={user.image} alt={user.name ?? ""} className="w-8 h-8 rounded-full" />
         ) : (
           <div className="w-8 h-8 rounded-full bg-rp-primary text-white flex items-center justify-center text-sm font-bold">

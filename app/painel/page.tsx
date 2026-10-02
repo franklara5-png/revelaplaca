@@ -133,6 +133,9 @@ export default async function PainelPage() {
         {/* Cabeçalho da conta */}
         <header className="flex items-center gap-4">
           {user.image ? (
+            // Avatar do Google, 56px: <img> direto. next/image passaria cada
+            // avatar pelo otimizador da Vercel (custo) sem ganho visível.
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={user.image}
               alt={user.name ?? ""}

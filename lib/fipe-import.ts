@@ -16,6 +16,7 @@ import { MARCAS_POPULARES } from "@/lib/constants/marcas-populares";
 
 // `any` no generic: script CLI usa `drizzle(neon(url))` sem schema, a rota de
 // cron usa `getDb()` com schema tipado — os dois precisam caber aqui.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyNeonDb = NeonHttpDatabase<any>;
 
 export const API_BASE = "https://parallelum.com.br/fipe/api/v1/carros";

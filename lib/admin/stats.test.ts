@@ -3,6 +3,7 @@ import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import { newDb } from "pg-mem";
 import { getDb } from "@/db";
+import * as schema from "@/db/schema";
 import {
   CARENCIA_PAGOS_SEM_RELATORIO_MIN,
   contarPagosSemRelatorio,
@@ -15,6 +16,7 @@ import {
 // builder tipado sem tocar no Neon de produção.
 const dbSemRede = drizzle(
   neon("postgres://user:***@localhost:5432/nao-usada"),
+  { schema },
 );
 
 describe("queryPagosSemRelatorio — SQL gerado", () => {

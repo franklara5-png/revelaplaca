@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getAllPosts, getPostsByCategory, isBlogCategory } from "@/lib/blog";
+import { getAllPosts } from "@/lib/blog";
 import { PostCard } from "@/components/blog";
 import { getSeoMetadata } from "@/lib/seo";
 import { Button } from "@/components/ui";
@@ -14,15 +14,10 @@ export const metadata = getSeoMetadata({
   keywords: ["consulta placa", "carro usado", "tabela fipe", "documentação veicular"],
 });
 
-export default async function BlogPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ category?: string }>;
-}) {
-  const { category } = await searchParams;
-  const posts = isBlogCategory(category)
-    ? getPostsByCategory(category)
-    : getAllPosts();
+// Sem filtro por ?category=: nada no site linkava para ele, e ler
+// searchParams tirava a página do cache (renderizava a cada visita).
+export default function BlogPage() {
+  const posts = getAllPosts();
 
   return (
     <div className="px-4 pb-20 pt-28">
