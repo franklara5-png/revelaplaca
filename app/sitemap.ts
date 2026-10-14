@@ -5,7 +5,10 @@ import { listarPostsBlog } from "@/lib/blog";
 
 // Sem isto o sitemap e gerado uma vez no build e congela: as URLs de FIPE e de
 // placa vem do banco, entao novas linhas so apareceriam no proximo deploy.
-export const revalidate = 3600;
+// Uma vez por dia (era 1 h): cada geracao faz uma consulta por marca + todas as
+// placas, e os robos pedem o sitemap o tempo todo — banco do Neon no plano
+// gratis (100 CU-horas/mes), 14/10/2026.
+export const revalidate = 86_400;
 
 type SitemapItem = {
   loc: string;

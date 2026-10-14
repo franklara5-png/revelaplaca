@@ -5,7 +5,8 @@ import { getSeoMetadata } from "@/lib/seo";
 import { listarMarcas } from "@/lib/fipe";
 import { SITE_NAME } from "@/lib/site-url";
 
-export const revalidate = 86_400;
+// Uma semana: a FIPE muda uma vez por mês. Era um dia.
+export const revalidate = 604_800;
 
 export async function generateMetadata() {
   return getSeoMetadata({

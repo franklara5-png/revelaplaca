@@ -11,12 +11,13 @@ import {
 } from "@/lib/fipe";
 import { SITE_NAME } from "@/lib/site-url";
 
-export const revalidate = 86_400;
+// Uma semana: a FIPE muda uma vez por mês (ver [modelo]/page.tsx). Era um dia.
+export const revalidate = 604_800;
 
 // Sem isto a rota dinâmica renderizava a cada visita (no-store, sem cache na
 // Vercel), mesmo com revalidate: cada acesso do Google ia ao banco. Lista vazia
 // = nada é gerado no build; cada página é gerada na primeira visita e fica em
-// cache por um dia.
+// cache por uma semana.
 export async function generateStaticParams() {
   return [];
 }
